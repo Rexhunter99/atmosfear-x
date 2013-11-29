@@ -1,0 +1,24 @@
+#include "Resource.h"
+#include <windows.h>
+
+
+1 24 "WinXP.manifest"
+1 BITMAP "latyle.bmp"
+2 BITMAP "tbb_raise.bmp"
+3 BITMAP "tbb_lower.bmp"
+4 BITMAP "tbb_cursor.bmp"
+5 BITMAP "tbb_level.bmp"
+
+
+///////////////////////////////////////////////////////////////////
+//->About Dialog
+///////////////////////////////////////////////////////////////////
+100 DIALOG 0,0, 180, 80
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "About"
+FONT 9, "Calibri"
+{
+    LTEXT "Carnivores Area Editor (AE3)\r\nVersion: 1.0\r\nBy Rexhunter99", 0, 5,5,180-60,110
+    CONTROL "", ABT_ICON, "STATIC", (SS_BITMAP), 180-55,0, 96,96
+    PUSHBUTTON "OK", ABT_OK, 180-40, 80-25, 30, 15, BS_DEFPUSHBUTTON
+}

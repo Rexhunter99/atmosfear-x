@@ -1,0 +1,2 @@
+Installer application/scripts for the game on Linux and Windows systems
+

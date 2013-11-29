@@ -1,0 +1,4 @@
+
+libfreetype-2
+libglfw
+libglew

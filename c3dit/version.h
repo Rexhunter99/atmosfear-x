@@ -1,0 +1,16 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+
+#define VERSION_MAJOR	1
+#define VERSION_MINOR	6
+#define VERSION_RELEASE	1
+
+#define MACROSTRING(x) #x
+
+#define RESOURCE_VERSION VERSION_MAJOR,VERSION_MINOR,VERSION_RELEASE,0
+#define RESOURCE_VERSION_STR(maj,min) #maj
+
+#define BUILD_DATE	__TIME__
+
+#endif //VERSION_h

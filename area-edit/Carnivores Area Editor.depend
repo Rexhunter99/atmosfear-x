@@ -1,0 +1,57 @@
+# depslib dependency file v1.0
+1281531036 source:c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\main.cpp
+	"Header.hpp"
+	"EZWindows.h"
+	<stdio.h>
+
+1281680404 c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\header.hpp
+	<windows.h>
+	"Resource.h"
+
+1281528125 c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\ezwindows.h
+	<windows.h>
+	<commctrl.h>
+	<windowsx.h>
+
+1281516815 source:c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\renderer.cpp
+	"Header.hpp"
+	<gl/gl.h>
+	<gl/glu.h>
+	<gl/glext.h>
+
+1281520041 source:c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\resource.rc
+
+1282294374 c:\documents and settings\nc6220\my documents\c projects\carnivores area editor\resource.h
+
+1293932510 source:c:\users\james\documents\c projects\carnivores area editor\resource.rc
+	"AVersion.h"
+	"Resource.h"
+	<windows.h>
+
+1308558458 source:c:\users\james\documents\c projects\carnivores area editor\main.cpp
+	"Header.hpp"
+	"EZWindows.h"
+	<stdio.h>
+
+1308558484 c:\users\james\documents\c projects\carnivores area editor\header.hpp
+	<windows.h>
+	"Resource.h"
+
+1293927394 c:\users\james\documents\c projects\carnivores area editor\resource.h
+
+1299021866 c:\users\james\documents\c projects\carnivores area editor\ezwindows.h
+	<windows.h>
+	<commctrl.h>
+	<windowsx.h>
+
+1298950577 source:c:\users\james\documents\c projects\carnivores area editor\renderer.cpp
+	"Header.hpp"
+	<gl/gl.h>
+	<gl/glu.h>
+	<gl/glext.h>
+
+1308562298 c:\users\james\documents\c projects\carnivores area editor\aversion.h
+
+1293949345 source:c:\users\james\documents\c projects\carnivores area editor\definitions.cpp
+	"Header.hpp"
+
