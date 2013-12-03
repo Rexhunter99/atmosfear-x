@@ -139,6 +139,7 @@ bool AudioAL::init( uint8_t p_voices )
 	}
 
 	alGenSources( 1, &m_looped_voice );
+	alCheckError( m_stream );
 
 	fprintf( m_stream, " Ok!\n" );
 
@@ -154,9 +155,9 @@ bool AudioAL::init( uint8_t p_voices )
 	return true;
 }
 
-bool AudioAL::shutdown()
+void AudioAL::shutdown()
 {
-	if ( !m_ready ) return false;
+	if ( !m_ready ) return;
 
 	fprintf( m_stream, "}\n\n" );
 
@@ -191,7 +192,7 @@ bool AudioAL::shutdown()
 
 	m_ready = false;
 
-	return true;
+	return;
 }
 
 bool AudioAL::process( )
@@ -405,8 +406,17 @@ void AudioAL::freeSound( sound_t p_snd )
 bool AudioAL::startLoopedVoice( sound_t p_snd )
 {
 	if ( !m_ready ) return false;
+
+	#if defined( AF_DEBUG )
+	if ( !alIsBuffer( m_sounds[p_snd] ) )
+	{
+		fprintf( m_stream, "\startLoopedVoice( %u ) -> ALBuffer is invalid!\n", p_snd );
+		return false;
+	}
+	#endif
+
 	alSource3f( m_looped_voice, AL_POSITION, 0.0f, 0.0f, 0.0f );
-	alSourcei( m_looped_voice, AL_BUFFER, p_snd );
+	alSourcei( m_looped_voice, AL_BUFFER, m_sounds[p_snd] );
 	alSourcef( m_looped_voice, AL_GAIN, 1.0f );
 	alSourcei( m_looped_voice, AL_LOOPING, AL_TRUE );
 	alSourcePlay( m_looped_voice );

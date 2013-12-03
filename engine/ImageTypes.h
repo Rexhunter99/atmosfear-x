@@ -1,7 +1,4 @@
-
-
-#ifndef H_IMAGETYPES_H
-#define H_IMAGETYPES_H
+#pragma once
 
 #include <stdint.h>
 
@@ -47,7 +44,7 @@ enum targa_e
 	TARGA_BIT_ORIGIN_TOPLEFT	= 16,
 	TARGA_BIT_DATA_STORAGE		= 96,
 
-	TARGA_END = 32768
+	TARGA_END		= 32768
 };
 
 #pragma pack(push, 1)
@@ -117,4 +114,3 @@ typedef struct WAVEFILEFORMAT
 
 #pragma pack(pop)
 
-#endif // H_IMAGETYPES_H

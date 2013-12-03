@@ -10,11 +10,10 @@
 using namespace std;
 
 
-/* NOTE: Put any OpenGL todo items here
-TODO: [OGL] Remove all deprecated glBegin/glEnd/glVertex/glColor/glTexcoord function calls
-TODO: [OGL] Optimise states, create a state variable cache (struct gl_cache_s{};)
-TODO: [OGL] Rewrite rendering system and terrain caching from scratch, use GL Shaders
-*/
+// NOTE: Put any OpenGL todo items here
+// TODO: [OGL] Remove all deprecated glBegin/glEnd/glVertex/glColor/glTexcoord function calls
+// TODO: [OGL] Optimise states, create a state variable cache (struct gl_cache_s{};)
+// TODO: [OGL] Rewrite rendering system and terrain caching from scratch, use GL Shaders
 
 
 ///////////////////////////////////////////////////////////////////
@@ -38,6 +37,28 @@ void TPicture::Release()
 	m_data = 0;
 	if ( m_texid ) glDeleteTextures( 1, &m_texid );
 	m_texid = 0;
+}
+
+void TPicture::Upload()
+{
+	if ( !this->m_data || !this->m_texid )
+	{
+		fprintf( stderr, "TPicture::Upload() -> m_data or m_texid is invalid!\n" );
+		return;
+	}
+
+	fprintf( stderr, "width: %d\n"
+					"height: %d\n"
+					"bpp: %d\n",
+					this->m_width, this->m_height, this->m_bpp);
+
+	glBindTexture(GL_TEXTURE_2D, this->m_texid );
+	glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
+
+	//Transfer the texture from CPU memory to GPU (High Performance) memory
+	if ( this->m_bpp == 16 ) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB5_A1, this->m_width,this->m_height, 0, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, this->m_data);
+	if ( this->m_bpp == 24 ) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->m_width,this->m_height, 0, GL_BGR, GL_UNSIGNED_BYTE, this->m_data);
+	if ( this->m_bpp == 32 ) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_width,this->m_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, this->m_data);
 }
 
 void CTexture::Allocate()
@@ -90,7 +111,7 @@ uint32_t Color_ARGB( BYTE R, BYTE G, BYTE B, BYTE A )
 // == Global Variables == //
 VideoOptions* VidOpt = 0;
 // Get rid of this:
-int			MyPrevHealth = MAX_HEALTH;
+int				MyPrevHealth = MAX_HEALTH;
 uint32_t		TerrainTime,WaterTime,CharacterTime,ObjectTime;
 
 
@@ -98,9 +119,7 @@ float		SkyTrans = 0.0f;
 bool		NEEDWATER; // Does the player see water?
 bool		VBENABLE;
 
-#define		MAX_RENDER_OBJECTS	2048
-vec2i	ORList[ MAX_RENDER_OBJECTS ]; // List of objects that the player can see
-int			ORLCount = 0;
+vector<vec2i>		ORList;
 int			zs =0;
 
 // Useless:
@@ -1364,10 +1383,10 @@ void RenderObject(int x, int y)
 {
 	if (OMap[y][x]==255) return;
 	if (!g->MODELS) return;
-	if (ORLCount>2000) return;
-	ORList[ORLCount].x = x;
-	ORList[ORLCount].y = y;
-	ORLCount++;
+	vec2i pos;
+	pos.x = x;
+	pos.y = y;
+	ORList.push_back( pos );
 }
 
 
@@ -1446,7 +1465,7 @@ void _RenderObject(int x, int y)
 
 void APIENTRY myErrorCallback( GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const char* _message, void* _userParam)
 {
-	fprintf( stderr, "%s\n", _message);
+	//fprintf( stderr, "%s\n", _message);
 	fprintf( hvideolog, "%s\n", _message );
 }
 
@@ -1485,6 +1504,11 @@ void Init3DHardware()
 		fprintf( hvideolog, "AMD_debug_output: True\n" );
 
 		//glDebugMessageCallbackAMD( myErrorCallback, NULL );
+	}
+
+	if ( GLEW_ARB_texture_non_power_of_two )
+	{
+		fprintf( hvideolog, "ARB_texture_non_power_of_two: True\n" );
 	}
 
 	VidOpt = GlobalVideoOptions::SharedVariable();
@@ -1636,7 +1660,7 @@ void Activate3DHardware()
 
 	if ( GLEW_EXT_clip_volume_hint )
 	{
-		glHint( GL_CLIP_VOLUME_CLIPPING_HINT_EXT, GL_NICEST );
+		glHint( GL_CLIP_VOLUME_CLIPPING_HINT_EXT, GL_FASTEST );
 		PrintLog( "\tDisabling OpenGL Clip Volume\r\n" );
 	}
 
@@ -1646,12 +1670,12 @@ void Activate3DHardware()
 	oglCreateTexture( false, false, &SkyTexture);
 
 	//Create Sprites for UI
-	oglCreateSprite(false,PausePic);
+	/*oglCreateSprite(false,PausePic);
 	oglCreateSprite(false,ExitPic);
 	oglCreateSprite(false,TrophyExit);
 	oglCreateSprite(false,TrophyPic);
 	oglCreateSprite(false,MapPic);
-	oglCreateSprite(false,RadarPic);
+	oglCreateSprite(false,RadarPic);*/
 
 	glClearDepth(1.0f);
 
@@ -1871,9 +1895,10 @@ void ShowVideo()
 
 	MyPrevHealth = MyHealth;
 
-#ifdef AF_DEBUG
-	//if ( g->GREMEDY ) glFrameTerminatorGREMEDY(); //<-For OpenGL Debugging.
+#if defined( AF_DEBUG ) && defined( OPENGL_DEBUG )
+	if ( g->GREMEDY ) glFrameTerminatorGREMEDY(); //<-For OpenGL Debugging.
 #endif
+
 	glfwSwapBuffers();
 	oglClearBuffers();
 }
@@ -1893,22 +1918,17 @@ void DrawPicture(int x, int y, TPicture &pic)
 	oglSetRenderState( GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 
-	float fW = float(pic.m_width);
-	float fH = float(pic.m_height);
-	float fcW = float(pic.m_cwidth);
-	float fcH = float(pic.m_cheight);
-
 	glBegin(GL_QUADS);
 	glColor4f(1,1,1,1);
 	if ( glFogCoordf ) glFogCoordf( 0.0f );
 
-	glTexCoord2f(0,0);
+	glTexCoord2f( 0, 0 );
 	glVertex4f(float(x),float(y),0.0f,1);
-	glTexCoord2f(fW/fcW,0);
+	glTexCoord2f( 1, 0 );
 	glVertex4f(float(x+pic.m_width),float(y),0.0f,1);
-	glTexCoord2f(fW/fcW, fH/fcH);
+	glTexCoord2f( 1, 1 );
 	glVertex4f(float(x+pic.m_width),float(y+pic.m_height),0.0f,1);
-	glTexCoord2f(0, fH/fcH);
+	glTexCoord2f( 0, 1 );
 	glVertex4f(float(x),float(y+pic.m_height),0.0f,1);
 
 	glEnd();
@@ -1919,10 +1939,44 @@ void DrawPicture(int x, int y, TPicture &pic)
 	//if (OptDayNight==2 && !NightVision) glEnable(GL_FOG);
 }
 
-void DrawTiled( TPicture &pic )
+void DrawPictureExt(int x, int y, float s, TPicture &pic)
 {
 	// == Global Function == //
 	// -> Draw a picture on screen
+
+	oglSetRenderState( GL_DEPTH_TEST, GL_FALSE );
+	oglSetRenderState( GL_FOG, GL_FALSE );
+
+	//if (OptDayNight==2 && !NightVision) glDisable(GL_FOG);
+
+	oglSetTexture( pic.m_texid );
+
+	oglSetRenderState( GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+	glBegin(GL_QUADS);
+	glColor4f(1,1,1,1);
+	if ( glFogCoordf ) glFogCoordf( 0.0f );
+
+	glTexCoord2f( 0, 0 );
+	glVertex4f( x, y, 0.0f, 1 );
+	glTexCoord2f( 1, 0 );
+	glVertex4f( x+(pic.m_width*s), y, 0.0f, 1 );
+	glTexCoord2f( 1, 1 );
+	glVertex4f( x+(pic.m_width*s), y+(pic.m_height*s), 0.0f, 1 );
+	glTexCoord2f( 0, 1 );
+	glVertex4f( x, y+(pic.m_height*s), 0.0f, 1 );
+
+	glEnd();
+	DrawCalls++;
+
+	oglSetRenderState( GL_DEPTH_TEST, GL_TRUE );
+}
+
+void DrawPictureTiled( TPicture &pic )
+{
+	// == Global Function == //
+	// -> Draw a picture covering the screen and tile it if it is smaller than the screen
 
 	oglSetRenderState( GL_DEPTH_TEST, GL_FALSE );
 	oglSetRenderState( GL_FOG, GL_FALSE );
@@ -1932,23 +1986,24 @@ void DrawTiled( TPicture &pic )
 	oglSetRenderState( GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 
-	float fW = float(pic.m_width);
-	float fH = float(pic.m_height);
-	float fcW = float(pic.m_cwidth);
-	float fcH = float(pic.m_cheight);
+	float tx = (float)WinW / (float)pic.m_width;
+	float ty = (float)WinH / (float)pic.m_height;
 
 	glBegin(GL_QUADS);
 	glColor4f(1,1,1,1);
 	if ( glFogCoordf ) glFogCoordf( 0.0f );
 
 	glTexCoord2f(0,0);
-	glVertex4f( 0.0f, 0.0f ,0.0f, 1);
-	glTexCoord2f(fW/fcW,0);
-	glVertex4f(float(x+pic.m_width),float(y),0.0f,1);
-	glTexCoord2f(fW/fcW, fH/fcH);
-	glVertex4f(float(x+pic.m_width),float(y+pic.m_height),0.0f,1);
-	glTexCoord2f(0, fH/fcH);
-	glVertex4f(float(x),float(y+pic.m_height),0.0f,1);
+	glVertex4f( 0.0f, 0.0f ,0.0f, 1.0f );
+
+	glTexCoord2f( tx,0);
+	glVertex4f( WinW, 0.0f, 0.0f, 1.0f );
+
+	glTexCoord2f( tx, ty );
+	glVertex4f( WinW, WinH, 0.0f, 1.0f );
+
+	glTexCoord2f( 0.0f, ty );
+	glVertex4f( 0.0f, WinH, 0.0f, 1.0f );
 
 	glEnd();
 	DrawCalls++;
@@ -1995,6 +2050,9 @@ void ShowControlElements()
 
 		sprintf( buf, "otime: %u", ObjectTime );
 		oglTextOut( WinEX-100, 112, buf, 0xFF20A0A0 );
+
+		sprintf( buf, "ocount: %u", ORList.size() );
+		oglTextOut( WinEX-100, 123, buf, 0xFF20A0A0 );
 
 		DrawCalls = 0;
 		TextureBinds = 0;
@@ -2081,11 +2139,10 @@ void RenderModelsList()
 
 	uint32_t start = glfwGetTime()*1000.0;
 
-	for (int o=0; o<ORLCount; o++)
+	for (int o=0; o<ORList.size(); o++)
 	{
 		_RenderObject(ORList[o].x, ORList[o].y);
 	}
-	ORLCount=0;
 
 	if (lpVertex) oglEndBuffer( );
 
@@ -2100,6 +2157,8 @@ void RenderGround()
 {
 	// == Global Function == //
 	// -> Render the ground
+	ORList.clear();
+
 	uint32_t start = glfwGetTime() * 1000.0;
 
 	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
@@ -3906,9 +3965,9 @@ bool CopyHARDToDIB(void)
 	tga.tgaBits				= 24;
 	tga.tgaDescriptor		= 0;
 
-	CreateDirectory( "SCREENSHOTS", 0 );
+	CreateDirectory( "screenshots", 0 );
 
-    sprintf( logt, "SCREENSHOTS/AF_SCREEN%04d.TGA", ++_shotcounter );
+    sprintf( logt, "screenshots/af_screen%04d.tga", ++_shotcounter );
     hf = fopen( logt, "wb" );
     if ( hf != 0 )
     {
@@ -3926,9 +3985,15 @@ void DrawHMap()
 	// -> Render the player map
 	int xx,yy;
 
-	// == Draw the map picture
+	oglSetRenderState( GL_BLEND, GL_TRUE );
+
+	// -- Draw the map frame
 	DrawPicture(VideoCX-MapPic.m_width/2, VideoCY - MapPic.m_height/2-6, MapPic);
 
+	// -- Draw the radar/gps/map
+	DrawPictureExt(11+VideoCX-MapPic.m_width/2, 23 + VideoCY - MapPic.m_height/2-6, 0.25f, RadarPic);
+
+	oglSetRenderState( GL_BLEND, GL_FALSE );
 	oglSetRenderState( GL_TEXTURE_2D, GL_FALSE );
 	oglSetRenderState( GL_DEPTH_TEST, GL_FALSE );
 

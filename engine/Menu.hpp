@@ -31,9 +31,57 @@ enum menustates_e
 
     MENU_MULTIPLAYER,
 
-    MENU_TROPHY
+    MENU_TROPHY,
 
     MENU_DUMMY
+};
+
+
+class CMenuItem
+{
+public:
+
+	virtual void click(){};
+	virtual void cursorEnter(){};
+	virtual void cursorLeave(){};
+	virtual void draw() = 0;
+
+	uint32_t	x,
+				y,
+				w,
+				h,
+				id;
+
+	bool		active;
+	uint32_t	flags;
+};
+
+class CMenuButton : public CMenuItem
+{
+public:
+    TPicture    *pic_current,
+				pic_off,
+				pic_on;
+
+	void cursorEnter();
+	void cursorLeave();
+	void draw();
+};
+
+class CMenuLabel : public CMenuItem
+{
+public:
+    std::string		text;
+
+	void draw();
+};
+
+class CMenuImage : public CMenuItem
+{
+public:
+	TPicture	pic;
+
+	void draw();
 };
 
 
@@ -50,43 +98,5 @@ public:
 	bool loadScript( std::string p_scriptname );
 
 	void processEvents();
-	void draw();
-};
-
-class CMenuItem
-{
-public:
-	CMenuItem();
-	virtual ~CMenuItem();
-
-	virtual void click(){};
-	virtual void cursorEnter(){};
-	virtual void cursorLeave(){};
-	virtual void draw() = 0;
-
-	uint32_t	x,
-				y,
-				w,
-				h,
-				id;
-
-	bool		active;
-};
-
-class CMenuButton : public CMenuItem
-{
-public:
-    TPicture    *pic_current,
-				pic_off,
-				pic_on;
-
-	void draw();
-};
-
-class CMenuLabel : public CMenuItem
-{
-public:
-    std::string		text;
-
 	void draw();
 };

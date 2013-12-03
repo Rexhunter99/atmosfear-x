@@ -2199,10 +2199,13 @@ void ProcessGame()
 }
 
 
+#include "Menu.hpp"
 
 
 int main( int argc, char *argv[] )
 {
+	Menu mobj;
+
     // -- Unix needs us to set the working directory to the directory where the binary is.
     InitWorkingDirectory();
 
@@ -2213,6 +2216,11 @@ int main( int argc, char *argv[] )
 	g->argc = argc;
 	g->argv = argv;
 
+#if defined( AF_PLATFORM_LINUX )
+	// -- Initialise GTK
+	gtk_init( &argc, &argv );
+#endif
+
 	// -- Create the Log file
 	CreateLog();
 
@@ -2222,7 +2230,10 @@ int main( int argc, char *argv[] )
 	// -- Create the main window
 	if ( !CreateMainWindow() )
 	{
-		goto main_badwindow;
+		CloseLog();
+		if ( hvideolog ) fclose( hvideolog );
+		glfwTerminate();
+		return 1000;	// <- Bad Window Error
 	}
 
 	// Zero the pointers
@@ -2234,13 +2245,36 @@ int main( int argc, char *argv[] )
 
 	memset( MessageList, 0, sizeof(TMessageList)*32 );
 
+	// -- Create the Audio Renderer
+	g_AudioDevice = new AudioAL( );
+
+	// -- Initialise interfaces
 	Init3DHardware();
 	InitXboxController();
 	InitEngine();
-
-	// -- Create the Audio Renderer and initialise it
-	g_AudioDevice = new AudioAL( );
 	g_AudioDevice->init( 32 );
+
+	// -- Activate the Graphics interface
+	Activate3DHardware();
+
+	mobj.loadScript( "huntdat/menu/main_menu.menu" );
+	mscMenu = g_AudioDevice->loadSound( "huntdat/soundfx/menutheme.wav" );
+
+	glDisable( GL_ALPHA_TEST );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	g_AudioDevice->startLoopedVoice( mscMenu );
+
+	while ( glfwGetWindowParam( GLFW_OPENED ) )
+	{
+		mobj.processEvents();
+
+		glClear( GL_COLOR_BUFFER_BIT );
+		mobj.draw();
+		glfwSwapBuffers();
+	}
+	goto ENDGAME;
 
 	StartLoading();
 	PrintLoad("Loading...");
@@ -2252,58 +2286,54 @@ int main( int argc, char *argv[] )
 	PrintLoad("Loading common resources: 3DF Files");
 
 	if (OptDayNight==2)
-		LoadModelEx(SunModel,    "HUNTDAT/MOON.3DF");
+		LoadModelEx(SunModel,    "huntdat/moon.3df");
 	else
-		LoadModelEx(SunModel,    "HUNTDAT/SUN2.3DF");
+		LoadModelEx(SunModel,    "huntdat/sun.3df");
 
-	LoadModelEx(CompasModel, "HUNTDAT/COMPAS.3DF");
-	LoadModelEx(Binocular,   "HUNTDAT/BINOCUL.3DF");
-	//LoadModelEx(Binocular,   "HUNTDAT/BINOCUL[16x9].3DF");
+	LoadModelEx(CompasModel, "huntdat/compass.3df");
+	LoadModelEx(Binocular,   "huntdat/binocs.3df");
+	//LoadModelEx(Binocular,   "huntdat/BINOCUL[16x9].3DF");
 
 	PrintLoad("Loading common resources: CAR Info");
 
-	LoadCharacterInfo(WCircleModel , "HUNTDAT/WCIRCLE2.CAR");
-	LoadCharacterInfo(ShipModel, "HUNTDAT/SHIP2A.CAR");
-	LoadCharacterInfo(WindModel, "HUNTDAT/WIND.CAR");
-	LoadCharacterInfo(SShipModel, "HUNTDAT/SSHIP1.CAR");
-	LoadCharacterInfo(AmmoModel, "HUNTDAT/BAG1.CAR");
+	LoadCharacterInfo(WCircleModel , "huntdat/waterring.car");
+	LoadCharacterInfo(ShipModel, "huntdat/dropship.car");
+	LoadCharacterInfo(WindModel, "huntdat/wind.car");
+	LoadCharacterInfo(SShipModel, "huntdat/supplyship.car");
+	LoadCharacterInfo(AmmoModel, "huntdat/bag.car");
 
 	PrintLoad("Loading common resources: WAV Files");
 
-	fxUnderwater = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/A_UNDERW.WAV" );
+	fxUnderwater = g_AudioDevice->loadSound( "huntdat/soundfx/a_underw.wav" );
 
 	fxJump = 0xFFFFFFFF;
 
-	fxStep[0] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/STEPS/HWALK1.WAV" );
-	fxStep[1] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/STEPS/HWALK2.WAV" );
-	fxStep[2] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/STEPS/HWALK3.WAV" );
+	fxStep[0] = g_AudioDevice->loadSound( "huntdat/soundfx/steps/hwalk1.wav" );
+	fxStep[1] = g_AudioDevice->loadSound( "huntdat/soundfx/steps/hwalk2.wav" );
+	fxStep[2] = g_AudioDevice->loadSound( "huntdat/soundfx/steps/hwalk3.wav" );
 
-	fxStepW[0] = g_AudioDevice->loadSound("HUNTDAT/SOUNDFX/STEPS/FOOTW1.WAV" );
-	fxStepW[1] = g_AudioDevice->loadSound("HUNTDAT/SOUNDFX/STEPS/FOOTW2.WAV" );
-	fxStepW[2] = g_AudioDevice->loadSound("HUNTDAT/SOUNDFX/STEPS/FOOTW3.WAV" );
+	fxStepW[0] = g_AudioDevice->loadSound("huntdat/soundfx/steps/footw1.wav" );
+	fxStepW[1] = g_AudioDevice->loadSound("huntdat/soundfx/steps/footw2.wav" );
+	fxStepW[2] = g_AudioDevice->loadSound("huntdat/soundfx/steps/footw3.wav" );
 
-	fxScream[0] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/HUM_DIE1.WAV" );
-	fxScream[1] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/HUM_DIE2.WAV" );
-	fxScream[2] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/HUM_DIE3.WAV" );
-	fxScream[3] = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/HUM_DIE4.WAV" );
-
-	mscMenu = g_AudioDevice->loadSound( "HUNTDAT/SOUNDFX/MENUTHEME.WAV" );
-	//g_AudioDevice->startLoopedVoice( mscMenu );
+	fxScream[0] = g_AudioDevice->loadSound( "huntdat/soundfx/hum_die1.wav" );
+	fxScream[1] = g_AudioDevice->loadSound( "huntdat/soundfx/hum_die2.wav" );
+	fxScream[2] = g_AudioDevice->loadSound( "huntdat/soundfx/hum_die3.wav" );
+	fxScream[3] = g_AudioDevice->loadSound( "huntdat/soundfx/hum_die4.wav" );
 
 	PrintLoad("Loading common resources: Image Files");
 
-	LoadPictureTGA(PausePic,   "HUNTDAT/MENU/PAUSE.TGA");
+	LoadPicture(PausePic,   "huntdat/menu/PAUSE.TGA");
 	conv_pic(PausePic);
-	LoadPictureTGA(ExitPic,    "HUNTDAT/MENU/EXIT.TGA");
+	LoadPicture(ExitPic,    "huntdat/menu/EXIT.TGA");
 	conv_pic(ExitPic);
-	LoadPictureTGA(TrophyExit, "HUNTDAT/MENU/TROPHY_E.TGA");
+	LoadPicture(TrophyExit, "huntdat/menu/TROPHY_E.TGA");
 	conv_pic(TrophyExit);
-	LoadPictureTGA(MapPic,     "HUNTDAT/MENU/MAPFRAME.TGA");
-	conv_pic(MapPic);
+	LoadPicture(MapPic,     "huntdat/menu/images/ui_gps_frame.tga");
 
-	LoadPictureTGA(TFX_ENVMAP,    "HUNTDAT/FX/ENVMAP.TGA");
+	LoadPicture(TFX_ENVMAP,    "huntdat/fx/ENVMAP.TGA");
 	ApplyAlphaFlags((uint16_t*)(TFX_ENVMAP.m_data), TFX_ENVMAP.m_width*TFX_ENVMAP.m_width);
-	LoadPictureTGA(TFX_SPECULAR,  "HUNTDAT/FX/SPECULAR.TGA");
+	LoadPicture(TFX_SPECULAR,  "huntdat/fx/SPECULAR.TGA");
 	ApplyAlphaFlags((uint16_t*)(TFX_SPECULAR.m_data), TFX_SPECULAR.m_width*TFX_SPECULAR.m_width);
 
 
@@ -2340,32 +2370,40 @@ int main( int argc, char *argv[] )
 		/*
 		Menu Process
 		*/
-		if (QUITMODE==1)
+		if (QUITMODE==1 || !glfwGetWindowParam( GLFW_OPENED ) )
 		{
 			ShutDown3DHardware();
 			g_AudioDevice->shutdown();
 			delete g_AudioDevice;
+			g_AudioDevice = 0;
 			QUITMODE=2;
 			break;
 		}
 		if (!QUITMODE)
 		{
-			if (true)//glfwGetWindowParam(GLFW_ACTIVE))
+			if ( !glfwGetWindowParam( GLFW_ICONIFIED ) )
 			{
 				//glfwEnable( GLFW_MOUSE_CURSOR );
 				ProcessGame();
 			}
 			else
 			{
-				glfwSleep( 1.0/1000.0); // Sleep for 1 second
+				glfwSleep( 1.0 ); // Sleep for 1 second
 			}
 		}
 	}
 
+ENDGAME:
 
 #if defined( USE_XBOXCONTROLLER )
 	ControllerRelease();
 #endif
+
+	if ( g_AudioDevice )
+	{
+		g_AudioDevice->shutdown();
+		delete g_AudioDevice;
+	}
 
 	ShutdownNetwork();
 	ShutDownEngine();
@@ -2379,10 +2417,6 @@ int main( int argc, char *argv[] )
 
 	// Gratz, we safely escaped the code monster!
 	return 0;
-
-main_badwindow:
-	glfwTerminate();
-	return 1000;	// <- Bad Window Error
 }
 
 

@@ -765,7 +765,7 @@ void oglTextOut(int x,int y, char *text,uint32_t color)
     //if (OptDayNight==2 && !NightVision) glEnable(GL_FOG);
 
 	oglSetRenderState( GL_TEXTURE_2D, GL_TRUE );
-	oglSetRenderState( GL_BLEND, false );
+	//oglSetRenderState( GL_BLEND, false );
 	oglSetRenderState( GL_DEPTH_TEST, true );
 }
 

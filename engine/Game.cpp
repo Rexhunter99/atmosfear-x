@@ -550,7 +550,7 @@ void ProcessCommandLine()
 {
     if ( g->argc <= 1 )
     {
-        strcpy( ProjectName, "HUNTDAT/AREAS/AREA2" );
+        strcpy( ProjectName, "huntdat/areas/AREA2" );
         TargetDino = ( 8 ) * 1024; // Allo
         WeaponPres = 16;
         OptDayNight = 1;

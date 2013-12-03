@@ -25,7 +25,7 @@ public:
 	bool init( uint8_t p_voices = 16 );
 
 	/* Shutdown the Audio Driver */
-	bool shutdown( );
+	void shutdown( );
 
 	/* Pause the audio */
 	bool pause();

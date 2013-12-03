@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #if defined( AF_PLATFORM_LINUX )
+#	include <gtk/gtk.h>
 #	include <GL/glew.h>
 #	include <GL/glxew.h>
 #	include <GL/glfw.h>
@@ -280,6 +281,7 @@ public:
 
 	void Allocate();
 	void Release();
+	void Upload();
 
 	TPicture() :
 		m_width(0),
@@ -864,6 +866,7 @@ void    conv_pic(TPicture &pic);
 void    LoadPicture(TPicture &pic, const char* pname);
 void    LoadPictureBMP(TPicture &pic, const char* pname);
 void    LoadPictureTGA(TPicture &pic, const char* pname);
+void	LoadPicturePNG(TPicture &pic, const char* pname);
 void    LoadCharacterInfo(TCharacterInfo&, const char*);
 void    LoadModelEx(TModel* &mptr, char* FName);
 void    LoadModel(TModel*&);

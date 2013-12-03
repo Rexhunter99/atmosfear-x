@@ -1,4 +1,6 @@
 
+// TODO: Rewrite this mess so it can read almost any kind of formatting used in the INI file.
+
 #include "IniFile.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,8 +1,13 @@
 #define INITGUID
 #include "Hunt.h"
-#include <stdio.h>
+
+#include <cstdio>
 #include <string.h>
-#include <assert.h>
+#include <cassert>
+#include <cerrno>
+
+using namespace std;
+
 
 typedef struct _TMenuSet {
 	int x0, y0;
@@ -25,6 +30,7 @@ int MaxDino, AreaMax, LoadCount;
 #define REGLISTY 370
 
 bool NEWPLAYER = false;
+
 
 int  MapVKKey(int k)
 {
@@ -127,11 +133,25 @@ void DoHalt(const char* Mess)
 		ShutdownNetwork();
 #if defined( AF_PLATFORM_WINDOWS )
 		MessageBox(NULL, Mess, "Carnivores Termination", MB_OK | MB_SYSTEMMODAL | MB_ICONEXCLAMATION);
+#elif defined( AF_PLATFORM_LINUX )
+		GtkWidget* msgbox = gtk_message_dialog_new( NULL,
+													GTK_DIALOG_DESTROY_WITH_PARENT,
+													GTK_MESSAGE_ERROR,
+													GTK_BUTTONS_CLOSE,
+													"ABNORMAL_HALT:\n %s\n%s",
+													Mess, g_strerror (errno));
+		if ( msgbox )
+		{
+			gtk_dialog_run(GTK_DIALOG( msgbox ) );
+			gtk_widget_destroy( msgbox );
+		}
 #endif
 		CloseLog();
 		glfwEnable( GLFW_MOUSE_CURSOR );
 		glfwCloseWindow();
+#if defined( AF_DEBUG )
 		assert( false );
+#endif
 	}
 	else
 	{
@@ -173,7 +193,6 @@ void UpdateLoadingWindow()
 
 	DrawPicture( 0,0, LoadWall );
 
-    Draw_Text( 19, LoadWall.m_height-22, loadtxt, 0xFF000000 );
     Draw_Text( 18, LoadWall.m_height-23, loadtxt, 0xFF70B0B0 );
 
 	glfwSwapBuffers();
@@ -184,13 +203,10 @@ GLuint LoadingTexture;
 
 void StartLoading()
 {
-	//LoadPicture(LoadWall,   "HUNTDAT/MENU/LOADBANNER.BMP");
+	//LoadPicture(LoadWall,   "huntdat/menu/LOADBANNER.BMP");
 
-    LoadPicture(LoadWall,   "HUNTDAT/MENU/LOADBANNER.TGA"); // 24-bit TARGA Loading Image
-    //LoadPicture(LoadWall,   "HUNTDAT/MENU/LOADING.TGA");
-
-	LoadWall.m_texid = oglCreateSprite( false, LoadWall );
-	gStateGLTextureBind = 0;
+    LoadPicture(LoadWall,   "huntdat/menu/LOADBANNER.TGA"); // 24-bit TARGA Loading Image
+    //LoadPicture(LoadWall,   "huntdat/menu/LOADING.TGA");
 
 	int s_w = 800, s_h = 600;
 
@@ -205,7 +221,6 @@ void EndLoading()
 {
     if ( lpVideoBuf ) memset(lpVideoBuf, 0, 1024*768*2 );
     LoadWall.Release();
-	//_HeapFree(Heap, 0, (void*)LoadWall.lpImage);
 }
 
 

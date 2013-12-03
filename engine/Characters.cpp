@@ -848,6 +848,7 @@ replace:
 
 void AnimateHuntDead(TCharacter *cptr)
 {
+	if ( !cptr ) return;
 
 	//if (!cptr->FTime) ActivateCharacterFx(cptr);
 
@@ -856,6 +857,7 @@ void AnimateHuntDead(TCharacter *cptr)
 
 	cptr->FTime += TimeDt;
 
+	// NOTE: Following line causes a SIGSEGV in some cases, cptr may be invalid
 	if(cptr->FTime >= cptr->pinfo->Animation[cptr->Phase].AniTime)
 	{
 		//NewPhase = true;

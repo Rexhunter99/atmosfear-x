@@ -873,21 +873,34 @@ void LoadPicture(TPicture &pic, const char* pname)
 	char fname[260];
 	strcpy( fname, pname );
     strlwr( fname );
-    if ( strstr( fname, ".bmp" ) )
+    if ( strstr( fname, ".bmp" ) )			// Windows Bitmap Image File
     {
-        LoadPictureBMP( pic, pname );
+		LoadPictureBMP( pic, pname );
     }
-    if ( strstr( fname, ".tga" ) )
+    else if ( strstr( fname, ".tga" ) )		// TarGA Image File
     {
-        LoadPictureTGA( pic, pname );
+		LoadPictureTGA( pic, pname );
     }
+    else if ( strstr( fname, ".png" ) )
+    {
+		fprintf( hlog, "WARNING: PNG Files are not supported yet.\n" );
+    }
+    else if ( strstr( fname, ".aft" ) )		// AtmosFEAR Texture File
+    {
+		fprintf( hlog, "WARNING: AFT Files are not supported yet.\n" );
+    }
+    else
+    {
+		fprintf( hlog, "WARNING: LoadPicture() was passed an unsupported file!\n" );
+    }
+
+    pic.Upload();
 }
 
 
 /*
 	LoadPictureBMP()
 	Load a Picture from a BMP file.
-	// TODO (Rexhunter99#1#): Use C++ new/delete, reflecting HEAP removal.
 */
 void LoadPictureBMP(TPicture &pic, const char* pname)
 {
@@ -913,8 +926,6 @@ void LoadPictureBMP(TPicture &pic, const char* pname)
     pic.Release();
     pic.Allocate();
 
-    //printf( "LoadPictureBMP() : m_width(%u), m_height(%u), m_bpp(%u)\n", pic.m_width, pic.m_height, pic.m_bpp );
-
     fread( pic.m_data, pic.m_width*(pic.m_bpp/8)*pic.m_height, 1, hfile );
 
     fclose( hfile );
@@ -924,8 +935,6 @@ void LoadPictureBMP(TPicture &pic, const char* pname)
 /*
 	LoadPictureTGA()
 	Load a Picture from a TGA file.
-	ToDo:
-    [Y] Use C++ new/delete, reflecting HEAP removal.
 */
 void LoadPictureTGA(TPicture &pic, const char* pname)
 {
@@ -953,46 +962,13 @@ void LoadPictureTGA(TPicture &pic, const char* pname)
 
     if ( tga.tgaImageType != 2 ) { fclose( hfile ); return; }
 
-    //fprintf( stderr, "LoadTGA() : %u, %u, %u\n", pic.m_width, pic.m_height, pic.m_bpp );
-
-    /*fseek( hfile, 1, SEEK_SET );
-    fread( &ColorMap, 1, 1, hfile );
-    fread( &ImageType, 1, 1, hfile );
-
-    fseek( hfile, 12, SEEK_SET );
-
-    fread( &pic.m_width, 2, 1, hfile );
-    fread( &pic.m_height, 2, 1, hfile );
-    fread( &pic.m_bpp, 1, 1, hfile );
-
-    fseek( hfile, 18, SEEK_SET );*/
-
-    /*
-    	Release the existing memory
-    */
+    // -- Release the existing memory
     pic.Release();
 
-    /*
-    	Allocate memory for the image
-    */
+    // -- Allocate memory for the image
     pic.Allocate();
-    /*if ( pic.m_bpp == 16 )
-    {
-        pic.m_data = malloc( sizeof(uint16_t) * (pic.m_width * pic.m_height) );
-    }
-    if ( pic.m_bpp == 24 )
-    {
-        pic.m_data = malloc( sizeof(rgb_t) * (pic.m_width * pic.m_height) );
-    }
-    if ( pic.m_bpp == 32 )
-    {
-        pic.m_data = malloc( sizeof(rgba_t) * (pic.m_width * pic.m_height) );
-    }*/
 
-    /*
-    	Read the data from the file
-    */
-    //fread( pic.m_data, pic.m_width*pic.m_height, pic.m_bpp/8, hfile );
+    // -- Read the data from the file
     for ( int y=pic.m_height-1; y>=0; y-- )
     {
 		fread( (uint8_t*)pic.m_data + ( (pic.m_width*(pic.m_bpp/8))*y ), pic.m_width*(pic.m_bpp/8), 1, hfile );
@@ -1002,59 +978,7 @@ void LoadPictureTGA(TPicture &pic, const char* pname)
     	Close the file handle
     */
     fclose( hfile );
-
-	//printf( "LoadPictureTGA() : m_bpp(%d)\n", pic.m_bpp );
-
-    /*
-		Create the texture in graphics memory
-	*/
-	//pic.m_texid = RenCreateTexture( false, pic.m_width, pic.m_height, 16, pic.m_data );
 }
-
-
-void CreateMipMapMT(uint16_t* dst, uint16_t* src, int H)
-{
-    for (int y=0; y<H; y++)
-        for (int x=0; x<127; x++)
-        {
-            int C1 = *(src + (x*2+0) + (y*2+0)*256);
-            int C2 = *(src + (x*2+1) + (y*2+0)*256);
-            int C3 = *(src + (x*2+0) + (y*2+1)*256);
-            int C4 = *(src + (x*2+1) + (y*2+1)*256);
-
-            if (!HARD3D)
-            {
-                C1>>=1;
-                C2>>=1;
-                C3>>=1;
-                C4>>=1;
-            }
-
-            /*if (C1 == 0 && C2!=0) C1 = C2;
-              if (C1 == 0 && C3!=0) C1 = C3;
-              if (C1 == 0 && C4!=0) C1 = C4;*/
-
-            if (C1 == 0)
-            {
-                *(dst + x + y*128) = 0;
-                continue;
-            }
-
-            //C4 = C1;
-
-            if (!C2) C2=C1;
-            if (!C3) C3=C1;
-            if (!C4) C4=C1;
-
-            int B = ( ((C1>> 0) & 31) + ((C2 >>0) & 31) + ((C3 >>0) & 31) + ((C4 >>0) & 31) +2 ) >> 2;
-            int G = ( ((C1>> 5) & 31) + ((C2 >>5) & 31) + ((C3 >>5) & 31) + ((C4 >>5) & 31) +2 ) >> 2;
-            int R = ( ((C1>>10) & 31) + ((C2>>10) & 31) + ((C3>>10) & 31) + ((C4>>10) & 31) +2 ) >> 2;
-            if (!HARD3D) *(dst + x + y * 128) = HiColor(R,G,B)*2;
-            else *(dst + x + y * 128) = HiColor(R,G,B);
-        }
-}
-
-
 
 void GetObjectCaracteristics(TModel* mptr, int& ylo, int& yhi)
 {
@@ -1104,37 +1028,14 @@ void GenerateMapImage()
 {
     int YShift = 23;
     int XShift = 11;
-    int lsw = MapPic.m_width;
 
-    for (int y=0; y<256; y++)
-        for (int x=0; x<256; x++)
-        {
-            int t;
-            uint16_t c;
+	RadarPic.Release();
 
-            if (FMap[y<<2][x<<2] & fmWater)
-            {
-                t = WaterList[WMap[y<<2][x<<2]].tindex;
-                c = *((uint16_t*)Textures[t]->m_data ); // TODO: use modulus and multiplication
-            }
-            else
-            {
-                t = TMap1[y<<2][x<<2];
-                c = *( (uint16_t*)Textures[t]->m_data + ( (x%128) + (y%128) * 128 ) );
-                float l = (float)(LMap[y<<2][x<<2]) / 255.0f;
+    RadarPic.m_width = 1024;
+    RadarPic.m_height = 1024;
+    RadarPic.m_bpp = 16;
 
-                int R = RGB15_R( c ) * l;
-                int G = RGB15_G( c ) * l;
-                int B = RGB15_B( c ) * l;
-
-                // Old Style
-                c = *((uint16_t*)Textures[t]->m_data);
-                // iOS Style
-                c = RGB15( R,G,B );
-            }
-
-            *((uint16_t*)MapPic.m_data + ((y+YShift)*lsw + x + XShift) ) = c;
-        }
+    RadarPic.Allocate();
 
 	// -- High resolution radar imagery RadarPic
 	uint16_t* img = (uint16_t*)RadarPic.m_data;
@@ -1147,21 +1048,25 @@ void GenerateMapImage()
 
         	if (FMap[y][x] & fmWater)
             {
-                *( img + i ) = *((uint16_t*)Textures[ WaterList[WMap[y][x]].tindex ]->m_data + ( ( (x%32) + (y%32) * 128 ) ) );
+            	uint16_t c = *((uint16_t*)Textures[ WaterList[WMap[y][x]].tindex ]->m_data + ( ( (x%32) + (y%32) * 128 ) ) );
+
+                *( img + i ) = c | 0x8000;
             }
             else
             {
             	uint16_t c = *( (uint16_t*)Textures[ TMap1[y][x] ]->m_data + ( (x%128) + (y%128) * 128 ) );
             	float l = (float)(LMap[y][x]) / 255.0f;
 
-				int R = RGB15_R( c ) * l;
-                int G = RGB15_G( c ) * l;
-                int B = RGB15_B( c ) * l;
+				int R = (RGB15_R( c )) * l;
+                int G = (RGB15_G( c )) * l;
+                int B = (RGB15_B( c )) * l;
 
 				*( img + i ) = RGB15( R,G,B );
             }
         }
 	}
+
+	RadarPic.Upload();
 
 	FILE* fp = fopen( "MAP.TGA", "wb" );
 
@@ -1181,11 +1086,11 @@ void GenerateMapImage()
 		tga.tgaYStart			= 0;
 		tga.tgaWidth			= 1024;
 		tga.tgaHeight			= 1024;
-		tga.tgaBits				= 16;
+		tga.tgaBits				= 32;
 		tga.tgaDescriptor		= 0;
 
 		fwrite( &tga, sizeof(TARGAFILEHEADER), 1, fp );
-		fwrite( RadarPic.m_data, 1024*1024*2, 1, fp );
+		fwrite( RadarPic.m_data, 1024*1024*4, 1, fp );
 
 		fclose(fp);
 	}
@@ -1197,19 +1102,17 @@ void ReleaseResources()
 {
     HeapReleased=0;
 
+	// -- Free all the textures
     for (int t=0; t<1024; t++)
     {
-        if (Textures[t])
+        if ( !Textures[t] ) break;
         {
             delete Textures[t];
             Textures[t] = 0;
         }
-        else
-        {
-            break;
-        }
     }
 
+	// -- Free all the models
     for (int m=0; m<255; m++)
     {
         TModel *mptr = MObjects[m].model;
@@ -1548,19 +1451,13 @@ void LoadResources()
     CreateTMap();
     RenderLightMap();
 
-    LoadPictureTGA(MapPic, "HUNTDAT/MENU/MAPFRAME.TGA");
-    conv_pic(MapPic);
-
-    RadarPic.m_cwidth = RadarPic.m_width = 1024;
-    RadarPic.m_cheight = RadarPic.m_height = 1024;
-    RadarPic.m_bpp = 16;
-    RadarPic.Release();
-    RadarPic.Allocate();
+    LoadPicture(MapPic, "huntdat/menu/images/ui_gps_frame.tga");
+    //conv_pic(MapPic);
 
     GenerateMapImage();
 
-    if (TrophyMode) LoadPictureTGA(TrophyPic, "HUNTDAT/MENU/TROPHY.TGA");
-    else LoadPictureTGA(TrophyPic, "HUNTDAT/MENU/TROPHY_G.TGA");
+    if (TrophyMode) LoadPictureTGA(TrophyPic, "huntdat/menu/TROPHY.TGA");
+    else LoadPictureTGA(TrophyPic, "huntdat/menu/TROPHY_G.TGA");
     conv_pic(TrophyPic);
 
 //    ReInitGame();
@@ -1582,7 +1479,7 @@ void LoadCharacters()
         {
             if (!ChInfo[c].mptr)
             {
-                sprintf(logt, "HUNTDAT/%s", DinoInfo[c].FName);
+                sprintf(logt, "huntdat/%s", DinoInfo[c].FName);
                 LoadCharacterInfo(ChInfo[c], logt);
                 PrintLog("Loading: ");
                 PrintLog(logt);
@@ -1598,7 +1495,7 @@ void LoadCharacters()
         if (TargetDino & (1<<c))
             if (!DinoInfo[AI_to_CIndex[c]].CallIcon.m_data)
             {
-                sprintf(logt, "HUNTDAT/MENU/PICS/CALL%d.TGA", c-9);
+                sprintf(logt, "huntdat/menu/pics/CALL%d.TGA", c-9);
                 LoadPicture(DinoInfo[AI_to_CIndex[c]].CallIcon, logt);
                 oglCreateSprite( true, DinoInfo[AI_to_CIndex[c]].CallIcon );
                 conv_pic(DinoInfo[AI_to_CIndex[c]].CallIcon);
@@ -1610,7 +1507,7 @@ void LoadCharacters()
         {
             if (!Weapon.chinfo[c].mptr)
             {
-                sprintf(logt, "HUNTDAT/WEAPONS/%s", WeapInfo[c].FName);
+                sprintf(logt, "huntdat/weapons/%s", WeapInfo[c].FName);
                 LoadCharacterInfo(Weapon.chinfo[c], logt);
                 PrintLog("Loading: ");
                 PrintLog(logt);
@@ -1620,7 +1517,7 @@ void LoadCharacters()
 
             if (!Weapon.BulletPic[c].m_data)
             {
-                sprintf(logt, "HUNTDAT/WEAPONS/%s", WeapInfo[c].BFName);
+                sprintf(logt, "huntdat/weapons/%s", WeapInfo[c].BFName);
                 LoadPicture(Weapon.BulletPic[c], logt);
                 oglCreateSprite( true, Weapon.BulletPic[c] );
                 conv_pic(Weapon.BulletPic[c]);
@@ -1639,11 +1536,11 @@ void LoadCharacters()
         if (TargetDino & (1<<c))
             if ( !fxCall[c-10][0] )
             {
-                sprintf(logt,"HUNTDAT/SOUNDFX/CALLS/CALL%d_A.WAV", (c-9));
+                sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_A.WAV", (c-9));
                 fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
-                sprintf(logt,"HUNTDAT/SOUNDFX/CALLS/CALL%d_B.WAV", (c-9));
+                sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_B.WAV", (c-9));
                 fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
-                sprintf(logt,"HUNTDAT/SOUNDFX/CALLS/CALL%d_C.WAV", (c-9));
+                sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_C.WAV", (c-9));
                 fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
             }
 }
@@ -1724,16 +1621,13 @@ void ReleaseCharacterInfo(TCharacterInfo &chinfo)
 
     for (int c = 0; c<64; c++)
     {
-        if (!chinfo.Animation[c].aniData) break;
+        if (!chinfo.Animation[c].aniData) continue;
         delete []  chinfo.Animation[c].aniData;
         chinfo.Animation[c].aniData = NULL;
     }
 
     for (int c = 0; c<64; c++)
     {
-        //if (!chinfo.SoundFX[c].lpData) break;
-        //delete [] chinfo.SoundFX[c].lpData;
-        //chinfo.SoundFX[c].lpData = NULL;
         g_AudioDevice->freeSound( chinfo.SoundFX[c] );
         chinfo.SoundFX[c] = 0;
     }
@@ -2231,7 +2125,7 @@ void LoadResourcesScript()
     FILE *stream;
     char line[256];
 
-    stream = fopen("HUNTDAT/_RES.TXT", "r");
+    stream = fopen("huntdat/_RES.TXT", "r");
     if (!stream) DoHalt("Can't open resources file \"HUNTDAT/_RES.TXT\"\n");
 
     while (fgets( line, 255, stream))

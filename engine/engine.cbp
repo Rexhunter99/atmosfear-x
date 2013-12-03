@@ -15,18 +15,16 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="prj=HUNTDAT/AREAS/AREA2 din=8 wep=255 dtm=1 -radar -double -debug -supply -window" />
+				<Option parameters="prj=huntdat/areas/AREA2 din=8 wep=255 dtm=1 w=1280 h=720 -radar -double -debug -supply -window" />
 				<Compiler>
-					<Add option="-Wextra" />
-					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="`pkg-config gtk+-2.0 --cflags`" />
 					<Add option="-DAF_DEBUG" />
 					<Add option="-DAF_PLATFORM_LINUX" />
 					<Add option="-D_LINUX" />
 					<Add option="-D_DEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="-pg" />
 					<Add option="-lrt" />
 					<Add option="-lGLEW" />
 					<Add option="-lglfw" />
@@ -34,6 +32,7 @@
 					<Add option="-lGL" />
 					<Add option="-lX11" />
 					<Add option="-lopenal" />
+					<Add option="`pkg-config gtk+-2.0 --libs`" />
 				</Linker>
 			</Target>
 			<Target title="Release-Nix">
@@ -45,6 +44,7 @@
 				<Option compiler="gcc" />
 				<Option parameters="prj=HUNTDAT/AREAS/AREA2 din=8 wep=255 dtm=0 -radar -double -debug -supply -window" />
 				<Compiler>
+					<Add option="`pkg-config gtk+-2.0 --cflags`" />
 					<Add option="-DAF_RELEASE" />
 					<Add option="-DAF_PLATFORM_LINUX" />
 					<Add option="-D_LINUX" />
@@ -58,6 +58,7 @@
 					<Add option="-lGL" />
 					<Add option="-lX11" />
 					<Add option="-lopenal" />
+					<Add option="`pkg-config gtk+-2.0 --libs`" />
 				</Linker>
 			</Target>
 			<Target title="Debug-Win">
@@ -167,7 +168,9 @@
 		<Unit filename="IniFile.cpp" />
 		<Unit filename="IniFile.h" />
 		<Unit filename="Interface.cpp" />
-		<Unit filename="Log.h" />
+		<Unit filename="Log.h">
+			<Option virtualFolder="STD/" />
+		</Unit>
 		<Unit filename="Menu.cpp">
 			<Option virtualFolder="Game/" />
 		</Unit>
@@ -187,11 +190,14 @@
 			<Option virtualFolder="Graphics/" />
 		</Unit>
 		<Unit filename="Resources.cpp" />
-		<Unit filename="VideoOptions.h">
+		<Unit filename="VideoGL.cpp">
 			<Option virtualFolder="Graphics/" />
 		</Unit>
-		<Unit filename="action.ico">
-			<Option virtualFolder="Resources/" />
+		<Unit filename="VideoGL.hpp">
+			<Option virtualFolder="Graphics/" />
+		</Unit>
+		<Unit filename="VideoOptions.h">
+			<Option virtualFolder="Graphics/" />
 		</Unit>
 		<Unit filename="afstring.h">
 			<Option virtualFolder="STD/" />
