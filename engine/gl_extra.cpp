@@ -742,7 +742,7 @@ void oglTextOut(int x,int y, char *text,uint32_t color)
 
 	// Gather some information
 	vec2i sz;
-	sz.y = GetTextH( 0, text );
+	sz.y = GetTextH( text );
 
 	//Shadow
 	glColor4ub(0,0,0,Alpha);

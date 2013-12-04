@@ -503,11 +503,12 @@ void AddShipTask(int cindex)
     bool TROPHYON  = (GetLandUpH(cptr->pos.x, cptr->pos.z) - GetLandH(cptr->pos.x, cptr->pos.z) < 100) &&
                      (!Tranq);
 
+	// -- Trophy Voice Over
     if (TROPHYON)
     {
         ShipTask.clist[ShipTask.tcount] = cindex;
         ShipTask.tcount++;
-        g_AudioDevice->addVoice( ShipModel.SoundFX[3] );
+        g_AudioDevice->addVoice( ShipModel.SoundFX[3], CameraX, CameraY, CameraZ );
     }
 
     //===== trophy =======//
@@ -589,7 +590,7 @@ void HideWeapon()
     {
         if ( (ShotsLeft[CurrentWeapon]==0) && (AmmoMag[CurrentWeapon]==0) ) return;
         if (WeapInfo[CurrentWeapon].Optic) g->OPTICMODE = true;
-        g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[0] );
+        g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[0], CameraX, CameraY, CameraZ );
         wptr->FTime = 0;
         wptr->state = 1;
         g->BINMODE = false;
@@ -599,7 +600,7 @@ void HideWeapon()
     }
 
     if (wptr->state!=2 || wptr->FTime!=0) return;
-    g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[2] );
+    g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[2], CameraX, CameraY, CameraZ );
     wptr->state = 3;
     wptr->FTime = 0;
     g->OPTICMODE = false;
@@ -961,7 +962,7 @@ void MakeCall()
     NextCall+=(RealTime % 2)+1;
     NextCall%=3;
 
-    g_AudioDevice->addVoice( fxCall[TargetCall-10][NextCall] );
+    g_AudioDevice->addVoice( fxCall[TargetCall-10][NextCall], CameraX, CameraY, CameraZ );
 
     float dmin = 512*256;
     int ai = -1;
@@ -1307,7 +1308,7 @@ void AnimateShip()
         {
             Ship.FTime=ShipModel.Animation[0].AniTime-1;
             Ship.State=2;
-            g_AudioDevice->addVoice( ShipModel.SoundFX[4] );
+            g_AudioDevice->addVoice( ShipModel.SoundFX[4], CameraX, CameraY, CameraZ );
             g_AudioDevice->addVoice( ShipModel.SoundFX[1], Ship.pos.x, Ship.pos.y, Ship.pos.z );
         }
         return;
@@ -1333,7 +1334,7 @@ void AnimateShip()
                 if (fabs(Characters[Ship.cindex].pos.y - (Ship.pos.y-650 - (Ship.DeltaY-2048))) < 1.f)
                 {
                     Ship.State = 1;
-                    g_AudioDevice->addVoice( ShipModel.SoundFX[5] );
+                    g_AudioDevice->addVoice( ShipModel.SoundFX[5], CameraX, CameraY, CameraZ );
                     //g_AudioDevice->addVoice( ShipModel.SoundFX[2], Ship.pos.x, Ship.pos.y, Ship.pos.z );
                 }
             return;
@@ -1374,7 +1375,7 @@ void AnimateShip()
             {
                 Ship.State = -1;
                 RemoveCharacter(Ship.cindex);
-                SetAmbient3d(0,0, 0,0,0);
+                g_AudioDevice->stopLoopedVoice(); //SetAmbient3d(0,0, 0,0,0);
                 return;
             }
             else
@@ -1480,7 +1481,7 @@ REENTER:
         if (SupplyShip.State==2)
         {
             SupplyShip.State = 0;
-            SetAmbient3d(0,0, 0,0,0);
+            g_AudioDevice->stopLoopedVoice(); //SetAmbient3d(0,0, 0,0,0);
             return;
         }
         AmmoBag.State = 1;
@@ -1905,7 +1906,7 @@ void AnimateProcesses()
         {
             answtime = 0;
             int r = rRand(128) % 3;
-            g_AudioDevice->addVoice( fxCall[answcall-10][r], answpos.x - CameraX, answpos.y - CameraY, answpos.z - CameraZ );
+            g_AudioDevice->addVoice( fxCall[answcall-10][r], answpos.x, answpos.y, answpos.z );
         }
     }
 
@@ -1953,7 +1954,7 @@ void AnimateProcesses()
             if (MyHealth) SaveTrophy();
             else LoadTrophy();
 
-            //DoHalt( 0 );
+            g_AudioDevice->stop();
             _GameState = GAMESTATE_MAINMENU;
         }
     }

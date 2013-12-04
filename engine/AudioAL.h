@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <cstdio>
+#include <string>
 #include <vector>
 
 typedef uint32_t	sound_t;
@@ -15,6 +16,10 @@ typedef uint32_t	voice_t;
 
 #define SOUND_ID_INVALID		0xFFFFFFFF
 
+enum {
+	AUDIO_CAMERA_POSITION,
+	AUDIO_CAMERA_ORIENTATION
+};
 
 class AudioAL
 {
@@ -35,6 +40,15 @@ public:
 	/* Resume the audio */
 	bool resume();
 
+	/* Stop the audio */
+	bool stop();
+
+	/* Set camera position */
+	void setCameraPosition( float p_x, float p_y, float p_z );
+
+	/* Set camera orientation */
+	void setCameraOrientation( float p_alpha, float p_beta );
+
 	/* Process an audio stream, wait for the buffer to complete playing */
 	bool process( );
 
@@ -54,7 +68,7 @@ public:
 	/* Add a voice to the world */
 	bool addVoice( sound_t p_snd, float x = 0.0f, float y = 0.0f, float z = 0.0f, float p_volume = 1.0f );
 
-	/* Set the looped sound and play it (For Music) */
+	/* Set the looped sound and play it (For Music/Ambient) */
 	bool startLoopedVoice( sound_t p_snd );
 
 	/* Stop the looped sound */
@@ -63,9 +77,12 @@ public:
 private:
 
 	bool					m_ready;
+	float					m_position[3];
+	sound_t					m_looped_sound;
 	uint32_t				m_looped_voice;
-	uint8_t					m_numvoices;
+	uint8_t					m_numvoices;	// Software AL supports 256 voices only it seems
 	FILE					*m_stream;
 	std::vector<sound_t>	m_sounds;
 	std::vector<voice_t>	m_voices;
+	std::vector<std::string>m_extensions;
 };

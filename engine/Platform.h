@@ -1,3 +1,4 @@
+#pragma once
 
 #ifndef H_PLATFORM_H
 #define H_PLATFORM_H
@@ -5,12 +6,19 @@
 
 #if defined( AF_PLATFORM_LINUX ) // Unix/Linux/Ubuntu distros
 
+#include <vector>
+#include <string>
+
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+
+int GetTextW(const char* s);
+int GetTextH(const char* s);
 
 
 extern XFontStruct* g_SmlFontInfo;
@@ -83,11 +91,40 @@ inline int MessageBox( void* p_hwnd, const char* p_text, const char* p_caption, 
 	Atom		destroy;
 	bool		run = true;
 	int32_t		result = 0;
+	int32_t		tx = GetTextW(p_text),
+				ty = GetTextH(p_text);
+
+	std::vector<std::string> lines;
+
+	if ( p_text )
+	{
+		char *temp = (char*)malloc( strlen( p_text ) );
+		memcpy( temp, p_text, strlen( p_text ) );
+		char *tok = strtok( temp, "\n" );
+
+		while ( tok )
+		{
+			printf( "MessageBox :: tok = \"%s\"\n", tok );
+			if ( GetTextW( tok ) > tx ) tx = GetTextW( tok );
+			lines.push_back( tok );
+			tok = strtok( NULL, "\n" );
+		}
+
+		printf( "MessageBox :: lines = %u\n", lines.size() );
+
+		free( temp );
+	}
+	else
+	{
+		return -1;
+	}
+
+	ty = g_SmlFontInfo->max_bounds.ascent * lines.size();
 
 	dpy = XOpenDisplay( NULL );
 
 	// -- Create a window
-	wnd = XCreateSimpleWindow( dpy, DefaultRootWindow(dpy), 0,0, 500, 300, 4, 0xFF0000, 0xCCCCCC );
+	wnd = XCreateSimpleWindow( dpy, DefaultRootWindow(dpy), 0,0, 20 + tx, 32+ty, 4, 0xFF0000, 0xCCCCCC );
 	// -- Get the atom for the deletion of a window (X button)
 	destroy = XInternAtom( dpy, "WM_DELETE_WINDOW", false );
 	// -- Apply that we wish to capture this as a ClientMessage
@@ -104,7 +141,7 @@ inline int MessageBox( void* p_hwnd, const char* p_text, const char* p_caption, 
 	// -- Map the window to the display
 	XMapWindow( dpy, wnd );
 
-	btn_ok		= XCreateSimpleWindow( dpy, wnd, 500-(64+8),300-(24+8), 64, 24, 1, 0x000000, 0xDDDDDD );
+	btn_ok		= XCreateSimpleWindow( dpy, wnd, ((tx+20)/2)-(64/2),((ty+20)+8)-(24), 64, 24, 1, 0x000000, 0xDDDDDD );
 
 	XSelectInput(	dpy, btn_ok, ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask );
 	XMapWindow( dpy, btn_ok );
@@ -152,7 +189,10 @@ inline int MessageBox( void* p_hwnd, const char* p_text, const char* p_caption, 
 
 						if ( ev.xexpose.window == wnd )
 						{
-							XDrawString( dpy, wnd, gc, 2, 2 + 48, p_text, strlen( p_text ) );
+							for ( int l = 0; l<lines.size(); l++ )
+							{
+								XDrawString( dpy, wnd, gc, 10, 10 + (10*l), lines[l].c_str(), lines[l].size() );
+							}
 						}
 						if ( ev.xexpose.window == btn_ok )
 						{

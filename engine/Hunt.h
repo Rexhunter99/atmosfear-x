@@ -751,8 +751,8 @@ void SetVideoMode(int, int);
 
 void CreateDivTable();
 void DrawTexturedFace();
-int GetTextW(HDC, const char*);
-int GetTextH(HDC, const char*);
+int GetTextW( const char* );
+int GetTextH( const char* );
 void wait_mouse_release();
 
 //============================== render =================================//

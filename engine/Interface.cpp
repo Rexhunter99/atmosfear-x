@@ -56,20 +56,28 @@ void wait_mouse_release()
 }
 
 
-int GetTextW(HDC hdc, const char* s)
+int GetTextW(const char* s)
 {
 	#if defined( AF_PLATFORM_LINUX )
-	vec2i sz;
-	sz.x = 0;
-	sz.y = 10;
+	int start_c = 0;
+	int mx = 0;
+	int x = 0;
+	int c = 0;
 
-	for ( int c = 0; c<strlen(s); ++c )
+	for ( c = 0; c<strlen(s); ++c )
 	{
-		XCharStruct* ci = ( (XCharStruct*)g_SmlFontInfo->per_char + c );
-		sz.x += ci->width;
+		if ( s[c] == '\n' )
+		{
+			x = XTextWidth( g_SmlFontInfo, s + start_c, (c-1)-start_c );
+			if ( x > mx ) mx = x;
+			start_c = ++c;
+		}
 	}
 
-	return sz.x;
+	x = XTextWidth( g_SmlFontInfo, s + start_c, c-start_c );
+	if ( x > mx ) mx = x;
+
+	return mx;
 
 	#elif defined( AF_PLATFORM_WINDOWS )
 	SIZE sz;
@@ -81,7 +89,7 @@ int GetTextW(HDC hdc, const char* s)
 	#endif
 }
 
-int GetTextH(HDC hdc, const char* s)
+int GetTextH(const char* s)
 {
 	#if defined( AF_PLATFORM_LINUX )
 	vec2i sz;
@@ -95,10 +103,12 @@ int GetTextH(HDC hdc, const char* s)
 	}
 	sz.y += g_SmlFontInfo->max_bounds.ascent;
 
+	return sz.y;
+
 	#elif defined( AF_PLATFORM_WINDOWS )
 	SIZE sz;
 
-	GetTextExtentPoint( hdcMain, "A", 1, &sz);
+	GetTextExtentPoint( hdcMain, s, strlen(s), &sz);
 
 	return sz.cy;
 	#endif
@@ -120,7 +130,7 @@ void PrintText(char* s, int x, int y, int rgb)
 
 void DoHalt(const char* Mess)
 {
-	AudioStop();
+	g_AudioDevice->stop();
 
 	if ( Mess != 0 )
 	{
@@ -130,9 +140,8 @@ void DoHalt(const char* Mess)
 		ShutDown3DHardware();
 		g_AudioDevice->shutdown();
 		delete g_AudioDevice;
-		ShutdownNetwork();
-		MessageBox(NULL, Mess, "Carnivores Termination", 0 );//MB_OK | MB_SYSTEMMODAL | MB_ICONEXCLAMATION);
-/*#if defined( AF_PLATFORM_WINDOWS )
+		//ShutdownNetwork();
+#if defined( AF_PLATFORM_WINDOWS )
 		MessageBox(NULL, Mess, "Carnivores Termination", MB_OK | MB_SYSTEMMODAL | MB_ICONEXCLAMATION);
 #elif defined( AF_PLATFORM_LINUX )
 #ifdef _USE_GTK
@@ -147,8 +156,10 @@ void DoHalt(const char* Mess)
 			gtk_dialog_run(GTK_DIALOG( msgbox ) );
 			gtk_widget_destroy( msgbox );
 		}
+#else
+	MessageBox(NULL, Mess, "Carnivores Termination", 0 );
 #endif // _USE_GTK
-#endif*/
+#endif
 		CloseLog();
 		glfwEnable( GLFW_MOUSE_CURSOR );
 		glfwCloseWindow();
@@ -159,6 +170,7 @@ void DoHalt(const char* Mess)
 	else
 	{
 		QUITMODE=1;
+		g_AudioDevice->stop();
 		_GameState = GAMESTATE_MAINMENU;
 	}
 

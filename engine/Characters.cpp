@@ -62,7 +62,7 @@ void ActivateCharacterFx(TCharacter *cptr)
 		return;
 	}
 
-	g_AudioDevice->addVoice( cptr->pinfo->SoundFX[fx], 4.0f, 4.0, 0);
+	g_AudioDevice->addVoice( cptr->pinfo->SoundFX[fx], cptr->pos.x, cptr->pos.y, cptr->pos.z );
 }
 
 
@@ -129,7 +129,7 @@ void AddDeadBody(TCharacter *cptr, int phase)
 	if(phase != HUNT_BREATH)
 	{
 		//AddVoicev( fxScream[r].length, fxScream[r].lpData, 256 );
-		g_AudioDevice->addVoice( fxScream[r] );
+		g_AudioDevice->addVoice( fxScream[r], CameraX, CameraY, CameraZ );
 	}
 
 	Characters[ChCount].Health = 0;
@@ -8682,7 +8682,7 @@ TBEGIN:
 	if(hdiff > 0)
 	{
 		AddWCircle(cptr->pos.x, cptr->pos.z, cptr->scale);
-		g_AudioDevice->addVoice( fxStepW[ (RealTime % 3) ] );
+		g_AudioDevice->addVoice( fxStepW[ (RealTime % 3) ], CameraX, CameraY, CameraZ );
 	}
 
 	if(hdiff > 560 * cptr->scale)

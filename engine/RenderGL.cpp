@@ -2066,8 +2066,10 @@ void ShowControlElements()
 	if ( bDevShow )
 	{
 		oglSetRenderState( GL_BLEND, GL_TRUE );
+		oglSetRenderState( GL_BLEND_SRC, GL_SRC_ALPHA );
+		oglSetRenderState( GL_BLEND_DST, GL_ONE_MINUS_SRC_ALPHA );
 
-		int th = GetTextH( 0, "A");
+		int th = GetTextH( "A");
 
 		oglDrawBox( 0,0, WinW, (th*32)+th, 0x80000000 );
 
@@ -2101,17 +2103,17 @@ void ShowControlElements()
 	{
 		int y = WinH / 3;
 		sprintf(buf,"Preparing for evacuation...");
-		oglTextOut(VideoCX - GetTextW(0, buf)/2, y, buf, 0xFF60C0D0);
+		oglTextOut(VideoCX - GetTextW(buf)/2, y, buf, 0xFF60C0D0);
 
 		sprintf(buf,"%d seconds left.", 1 + ExitTime / 1000);
-		oglTextOut(VideoCX - GetTextW(0, buf)/2, y + 18, buf, 0xFF60C0D0);
+		oglTextOut(VideoCX - GetTextW(buf)/2, y + 18, buf, 0xFF60C0D0);
 	}
 
 #ifdef AF_DEBUG
 	{
 		//sprintf( buf, "%s", "Carnivores [OpenGL] " V_VERSION " Debug" );
-		sprintf( buf, "Carnivores [%s] %u.%u.%u r%u %s", V_PLATFORM, Version::MAJOR, Version::MINOR, Version::BUILD, Version::REVISION, Version::STATUS );
-		oglTextOut( VideoCX - GetTextW(0, buf)/2, GetTextH(0, buf), buf, 0xFFFFFFFF );
+		sprintf( buf, "AtmosFEAR X [%s] %u.%u.%u r%u %s", V_PLATFORM, Version::MAJOR, Version::MINOR, Version::BUILD, Version::REVISION, Version::STATUS );
+		oglTextOut( VideoCX - GetTextW(buf)/2, GetTextH(buf), buf, 0xFFFFFFFF );
 	}
 #endif
 }
@@ -3444,20 +3446,20 @@ void DrawTrophyText(int x0, int y0)
 	x0+=14; y0+=18;
     x = x0;
 
-	oglTextOut(x, y0   , "Name: ", 0xFFBFBFBF);  x+=GetTextW(0,"Name: ");
+	oglTextOut(x, y0   , "Name: ", 0xFFBFBFBF);  x+=GetTextW("Name: ");
 	if ( !g->CHEATED )
 		oglTextOut(x, y0   , DinoInfo[dtype].Name, 0xFF00BFBF);
 	else
 		oglTextOut(x, y0   , DinoInfo[dtype].Name, 0xFF0000F0);
 
 	x = x0;
-	oglTextOut(x, y0+16, "Weight: ", 0xFFBFBFBF);  x+=GetTextW(0,"Weight: ");
+	oglTextOut(x, y0+16, "Weight: ", 0xFFBFBFBF);  x+=GetTextW("Weight: ");
 
 	if (OptSys)	sprintf(t,"%3.2ft ", DinoInfo[dtype].Mass * scale * scale / 0.907);
 	else		sprintf(t,"%3.2fT ", DinoInfo[dtype].Mass * scale * scale);
 
-    oglTextOut(x, y0+16, t, 0xFF00BFBF);    x+=GetTextW(0,t);
-    oglTextOut(x, y0+16, "Length: ", 0xFFBFBFBF); x+=GetTextW(0,"Length: ");
+    oglTextOut(x, y0+16, t, 0xFF00BFBF);    x+=GetTextW(t);
+    oglTextOut(x, y0+16, "Length: ", 0xFFBFBFBF); x+=GetTextW("Length: ");
 
 	if (OptSys) sprintf(t,"%3.2fft", DinoInfo[dtype].Length * scale / 0.3);
 	else		sprintf(t,"%3.2fm", DinoInfo[dtype].Length * scale);
@@ -3465,31 +3467,31 @@ void DrawTrophyText(int x0, int y0)
 	oglTextOut(x, y0+16, t, 0xFF00BFBF);
 
 	x = x0;
-	oglTextOut(x, y0+32, "Weapon: ", 0xFFBFBFBF);  x+=GetTextW(0,"Weapon: ");
+	oglTextOut(x, y0+32, "Weapon: ", 0xFFBFBFBF);  x+=GetTextW("Weapon: ");
 
 	sprintf(t,"%s    ", WeapInfo[wep].Name);
-	oglTextOut(x, y0+32, t, 0xFF00BFBF);   x+=GetTextW(0,t);
-    oglTextOut(x, y0+32, "Score: ", 0xFFBFBFBF);   x+=GetTextW(0,"Score: ");
+	oglTextOut(x, y0+32, t, 0xFF00BFBF);   x+=GetTextW(t);
+    oglTextOut(x, y0+32, "Score: ", 0xFFBFBFBF);   x+=GetTextW("Score: ");
 
 	sprintf(t,"%d", score);
 	oglTextOut(x, y0+32, t, 0xFF00BFBF);
 
 
 	x = x0;
-	oglTextOut(x, y0+48, "Range of kill: ", 0xFFBFBFBF);  x+=GetTextW(0,"Range of kill: ");
+	oglTextOut(x, y0+48, "Range of kill: ", 0xFFBFBFBF);  x+=GetTextW("Range of kill: ");
 	if (OptSys) sprintf(t,"%3.1fft", range / 0.3);
 	else        sprintf(t,"%3.1fm", range);
     oglTextOut(x, y0+48, t, 0xFF00BFBF);
 
 
 	x = x0;
-	oglTextOut(x, y0+64, "Date: ", 0xFFBFBFBF);  x+=GetTextW(0,"Date: ");
+	oglTextOut(x, y0+64, "Date: ", 0xFFBFBFBF);  x+=GetTextW("Date: ");
 
 	if (OptSys)	sprintf(t,"%d.%d.%d   ", ((date>>10) & 255), (date & 255), date>>20);
 	else		sprintf(t,"%d.%d.%d   ", (date & 255), ((date>>10) & 255), date>>20);
 
-    oglTextOut(x, y0+64, t, 0xFF00BFBF);   x+=GetTextW(0,t);
-    oglTextOut(x, y0+64, "Time: ", 0xFFBFBFBF);   x+=GetTextW(0,"Time: ");
+    oglTextOut(x, y0+64, t, 0xFF00BFBF);   x+=GetTextW(t);
+    oglTextOut(x, y0+64, "Time: ", 0xFFBFBFBF);   x+=GetTextW("Time: ");
 	sprintf(t,"%d:%02d", ((time>>10) & 255), (time & 255));
 	oglTextOut(x, y0+64, t, 0xFF00BFBF);
 }

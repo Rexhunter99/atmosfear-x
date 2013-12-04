@@ -1531,14 +1531,14 @@ void LoadCharacters()
     for (int c=10; c<20; c++)
 #endif
         if (TargetDino & (1<<c))
-            if ( !fxCall[c-10][0] )
+            if ( fxCall[c-10][0] == SOUND_ID_INVALID )
             {
                 sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_A.WAV", (c-9));
                 fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
                 sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_B.WAV", (c-9));
-                fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
+                fxCall[c-10][1] = g_AudioDevice->loadSound( logt );
                 sprintf(logt,"huntdat/soundfx/CALLS/CALL%d_C.WAV", (c-9));
-                fxCall[c-10][0] = g_AudioDevice->loadSound( logt );
+                fxCall[c-10][2] = g_AudioDevice->loadSound( logt );
             }
 }
 

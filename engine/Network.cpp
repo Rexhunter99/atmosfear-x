@@ -1,8 +1,7 @@
 
-#ifdef USE_NETWORK
 
 #include "Platform.h"
-//#include "Network.h"
+#include "Network.h"
 
 
 #if defined( AF_PLATFORM_LINUX )
@@ -46,7 +45,7 @@ Network::~Network()
 }
 
 
-bool Network::SetupServer( int p_port )
+/*bool Network::SetupServer( int p_port )
 {
 	struct addrinfo	hints, *result;
 
@@ -57,6 +56,5 @@ bool Network::SetupServer( int p_port )
 	}
 
 	return true;
-}
+}*/
 
-#endif

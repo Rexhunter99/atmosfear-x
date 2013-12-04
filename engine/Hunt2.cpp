@@ -851,7 +851,7 @@ void DrawPostObjects()
 						{
 							wptr->state = 4;
 							wptr->FTime = 1;
-							g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[3] );
+							g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[3], CameraX, CameraY, CameraZ );
 						}
 
 
@@ -864,7 +864,7 @@ void DrawPostObjects()
 						{
 							wptr->state = 4;
 							wptr->FTime = 1;
-							g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[3] );
+							g_AudioDevice->addVoice( wptr->chinfo[CurrentWeapon].SoundFX[3], CameraX, CameraY, CameraZ );
 						}
 					}
 			}
@@ -1126,7 +1126,7 @@ void ChangeCall()
             if (SupplyUsed) return;
             SupplyUsed = true;
             if (SupplyShip.State) return;
-            g_AudioDevice->addVoice( SShipModel.SoundFX[1] );
+            g_AudioDevice->addVoice( SShipModel.SoundFX[1], CameraX, CameraY, CameraZ );
 
             SupplyShip.pos.x = PlayerX - (ctViewR+4)*256;
             if (SupplyShip.pos.x < 256) SupplyShip.pos.x = PlayerX + (ctViewR+4)*256;
@@ -1309,7 +1309,7 @@ bool ProcessShoot()
 		HeadBackR=64;
 		//if (HeadBackR>64) HeadBackR=64;
 
-		g_AudioDevice->addVoice(  wptr->chinfo[CurrentWeapon].SoundFX[1] );
+		g_AudioDevice->addVoice(  wptr->chinfo[CurrentWeapon].SoundFX[1], CameraX, CameraY, CameraZ );
 		TrophyRoom.Last.smade++;
 
 		for (int s=0; s<=WeapInfo[CurrentWeapon].TraceC; s++)
@@ -1583,7 +1583,7 @@ void ProcessSlide()
                 if (YSpeed == 0 && !g->SWIM)
                 {
                     YSpeed = 600 + (float)fabs(VSpeed) * 600;
-                    g_AudioDevice->addVoice( fxJump );
+                    g_AudioDevice->addVoice( fxJump, CameraX, CameraY, CameraZ );
                     vec3 v; v.x = PlayerX, v.y = PlayerY; v.z = PlayerZ;
                     MakeNoise( v, ctViewR*200 * 0.05f );
                 }
@@ -1690,6 +1690,7 @@ void ProcessDemoMovement()
 		//DemoPoint.DemoTime = 0;
 		//LoadTrophy();
 		//DoHalt("");
+		g_AudioDevice->stop();
 		_GameState = GAMESTATE_MAINMENU;
 		return;
 	}
@@ -1862,7 +1863,7 @@ void ProcessDemoMovement()
                 PlayerY+=(h-PlayerY+32)*DeltaT*4;
                 if (PlayerY>h) PlayerY = h;
                 if (YSpeed<-600)
-                    g_AudioDevice->addVoice( fxStep[(RealTime % 3)] ); // v == 64 / 256
+                    g_AudioDevice->addVoice( fxStep[(RealTime % 3)], CameraX, CameraY, CameraZ ); // v == 64 / 256
                 YSpeed = 0;
             }
 
@@ -1890,12 +1891,12 @@ SKIPYMOVE:
                         {
                             MakeNoise( vec3( PlayerX, PlayerY, PlayerZ ), ctViewR*200 * 0.12f );
                             AddWCircle(CameraX, CameraZ, 1.2f);
-                            g_AudioDevice->addVoice( fxStepW[(RealTime % 3)] ); //64+(int)(VSpeed*30.f));
+                            g_AudioDevice->addVoice( fxStepW[(RealTime % 3)], CameraX, CameraY, CameraZ ); //64+(int)(VSpeed*30.f));
                         }
                         else
                         {
                             MakeNoise( vec3( PlayerX, PlayerY, PlayerZ ), ctViewR*200 * 0.05f );
-                            g_AudioDevice->addVoice(fxStep[(RealTime % 3)] ); //24+(int)(VSpeed*50.f));
+                            g_AudioDevice->addVoice(fxStep[(RealTime % 3)], CameraX, CameraY, CameraZ ); //24+(int)(VSpeed*50.f));
                         }
             stepdd = d;
 
@@ -2081,15 +2082,17 @@ SKIPYMOVE:
 
             if (g->UNDERWATER)
             {
-                //SetAmbient( fxUnderwater ); //240);
-                Audio_SetEnvironment(8, ctViewR*256.0f);
+                g_AudioDevice->startLoopedVoice( fxUnderwater );//SetAmbient( fxUnderwater ); //240);
+                //Audio_SetEnvironment(8, ctViewR*256.0f);
             }
             else
             {
+                /*
+                //TODO: use g_AudioDevice
                 SetAmbient(Ambient[CameraAmb].sfx.length,
                            Ambient[CameraAmb].sfx.lpData,
                            Ambient[CameraAmb].AVolume);
-                Audio_SetEnvironment(Ambient[CameraAmb].rdata[0].REnvir, ctViewR*256.0f);
+                Audio_SetEnvironment(Ambient[CameraAmb].rdata[0].REnvir, ctViewR*256.0f);*/
 
 
                 if (Ambient[CameraAmb].RSFXCount)
@@ -2100,11 +2103,12 @@ SKIPYMOVE:
                         Ambient[CameraAmb].RndTime = (Ambient[CameraAmb].rdata[0].RFreq / 2 + rRand(Ambient[CameraAmb].rdata[0].RFreq)) * 1000;
                         int rr = (rand() % Ambient[CameraAmb].RSFXCount);
                         int r = Ambient[CameraAmb].rdata[rr].RNumber;
-                        AddVoice3dv(RandSound[r].length, RandSound[r].lpData,
+                        //TODO: use g_AudioDevice
+                        /*AddVoice3dv(RandSound[r].length, RandSound[r].lpData,
                                     CameraX + siRand(4096),
                                     CameraY + siRand(256),
                                     CameraZ + siRand(4096) ,
-                                    Ambient[CameraAmb].rdata[rr].RVolume);
+                                    Ambient[CameraAmb].rdata[rr].RVolume);*/
                     }
                 }
             }
@@ -2144,7 +2148,7 @@ void ProcessGame()
 	if (RestartMode)
 	{
 		Activate3DHardware();
-		AudioStop();
+		g_AudioDevice->stop();
 		NeedRVM = true;
 	}
 
@@ -2169,7 +2173,8 @@ void ProcessGame()
 	{
 		UpdateControllerState();//<-Xbox Controller
 		ProcessControls();
-		AudioSetCameraPos(CameraX, CameraY, CameraZ, CameraAlpha, CameraBeta);
+		g_AudioDevice->setCameraPosition( CameraX, CameraY, CameraZ );
+		g_AudioDevice->setCameraOrientation( CameraAlpha, CameraBeta );
 		AnimateCharacters();
 		AnimateProcesses();
 	}
@@ -2332,11 +2337,13 @@ int main( int argc, char *argv[] )
 	// -- Initialise interfaces
 	Init3DHardware();
 	InitXboxController();
-	InitializeNetwork();
+	//InitializeNetwork();
 	g_AudioDevice->init( 32 );
 
 	// -- Activate the Graphics interface
 	Activate3DHardware();
+
+	//MessageBox( NULL, "Testing the X11 MessageBox\nnewline\nThird line is the longest line of all afterall!", "X11", 0 );
 
 	// -- Initialise some menu stuff
 	// TODO: Move this
@@ -2414,7 +2421,7 @@ int main( int argc, char *argv[] )
 	}
 
 	ShutDown3DHardware();
-	ShutdownNetwork();
+	//ShutdownNetwork();
 	ShutDownEngine();
 	glfwEnable( GLFW_MOUSE_CURSOR );
 
@@ -2910,7 +2917,7 @@ ENDKEYS:
 	case GLFW_KEY_F9:
 #if defined( AF_DEBUG )
 		ShutDown3DHardware();
-		AudioStop();
+		g_AudioDevice->stop();
 		DoHalt( "Emergency Debug Halt" );
 #endif
 		break;
