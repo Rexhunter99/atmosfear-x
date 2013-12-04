@@ -47,11 +47,6 @@ void TPicture::Upload()
 		return;
 	}
 
-	fprintf( stderr, "width: %d\n"
-					"height: %d\n"
-					"bpp: %d\n",
-					this->m_width, this->m_height, this->m_bpp);
-
 	glBindTexture(GL_TEXTURE_2D, this->m_texid );
 	glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE );
 
@@ -1716,7 +1711,7 @@ void ShutDown3DHardware()
 		pTextures[i] = 0;
 	}
 
-	HARD3D == false;
+	HARD3D = false;
 
 	PrintLog("}\n");
 }

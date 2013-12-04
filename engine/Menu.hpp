@@ -37,6 +37,15 @@ enum menustates_e
 };
 
 
+enum menuitem_type_e
+{
+	MI_NONE					= 0,
+	MI_BUTTON				= 1,
+
+	MI_MAX,
+};
+
+
 class CMenuItem
 {
 public:
@@ -50,7 +59,8 @@ public:
 				y,
 				w,
 				h,
-				id;
+				id,
+				type;
 
 	bool		active;
 	uint32_t	flags;
@@ -63,6 +73,8 @@ public:
 				pic_off,
 				pic_on;
 
+	CMenuButton();
+
 	void cursorEnter();
 	void cursorLeave();
 	void draw();
@@ -73,6 +85,8 @@ class CMenuLabel : public CMenuItem
 public:
     std::string		text;
 
+    CMenuLabel();
+
 	void draw();
 };
 
@@ -80,6 +94,8 @@ class CMenuImage : public CMenuItem
 {
 public:
 	TPicture	pic;
+
+	CMenuImage();
 
 	void draw();
 };

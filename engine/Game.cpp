@@ -1,136 +1,14 @@
 #include "Hunt.h"
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
 #include <string.h>
+
+using namespace std;
+
 
 void SetupRes()
 {
-    if ( CustomRes ) return;
-
-    if (!HARD3D) if (OptRes>5) OptRes=5;
-
-    //4:3
-    if (OptRes==0)
-    {
-        WinW = 320;
-        WinH=240;
-    }
-    if (OptRes==1)
-    {
-        WinW = 400;
-        WinH=300;
-    }
-    if (OptRes==2)
-    {
-        WinW = 512;
-        WinH=384;
-    }
-    if (OptRes==3)
-    {
-        WinW = 640;
-        WinH=480;
-    }
-    if (OptRes==4)
-    {
-        WinW = 800;
-        WinH=600;
-    }
-    if (OptRes==5)
-    {
-        WinW =1024;
-        WinH=768;
-    }
-    if (OptRes==6)
-    {
-        WinW =1280;
-        WinH=1024;
-    }
-    if (OptRes==7)
-    {
-        WinW =1600;
-        WinH=1200;
-    }
-
-    //16:9
-    if (OptRes==8 )
-    {
-        WinW =  960;
-        WinH=540;
-    }
-    if (OptRes==9 )
-    {
-        WinW = 1024;
-        WinH=576;
-    }
-    if (OptRes==10)
-    {
-        WinW = 1280;
-        WinH=720;
-    }
-    if (OptRes==11)
-    {
-        WinW = 1366;
-        WinH=768;
-    }
-    if (OptRes==12)
-    {
-        WinW = 1600;
-        WinH=900;
-    }
-    if (OptRes==13)
-    {
-        WinW = 1920;
-        WinH=1080;
-    }
-    if (OptRes==14)
-    {
-        WinW = 2048;
-        WinH=1152;
-    }
-
-    //16:10
-    if (OptRes==15)
-    {
-        WinW =768;
-        WinH=480;
-    }
-    if (OptRes==16)
-    {
-        WinW =1024;
-        WinH=640;
-    }
-    if (OptRes==17)
-    {
-        WinW =1152;
-        WinH=720;
-    }
-    if (OptRes==18)
-    {
-        WinW =1280;
-        WinH=800;
-    }
-    if (OptRes==19)
-    {
-        WinW =1440;
-        WinH=900;
-    }
-    if (OptRes==20)
-    {
-        WinW =1680;
-        WinH=1050;
-    }
-    if (OptRes==21)
-    {
-        WinW =1920;
-        WinH=1200;
-    }
-    if (OptRes==22)
-    {
-        WinW =2304;
-        WinH=1440;
-    }
-
-    Aspect = (float(WinW) / float(WinH));
+	// NOTE: Depracted, ready for removal
 }
 
 
@@ -264,11 +142,7 @@ void CalcModelGroundLight(TModel *mptr, float x0, float z0, int FI)
     {
         float x = mptr->gVertex[v].x * ca + mptr->gVertex[v].z * sa + x0;
         float z = mptr->gVertex[v].z * ca - mptr->gVertex[v].x * sa + z0;
-#if defined(_d3d) || defined(_gl)
-        mptr->VLight[0][v] = (int)GetLandLt2(x, z) - 128;
-#else
         mptr->VLight[0][v] = (float)GetLandLt2(x, z) - 128;
-#endif
     }
 }
 
@@ -908,7 +782,7 @@ void InitEngine()
     g->MORPHP			= true;
     g->MORPHA			= true;
 
-    _GameState		= 0;
+    _GameState		= GAMESTATE_MAINMENU;
 
     RadarMode		= false;
     NightVision		= true;
@@ -976,9 +850,6 @@ void InitEngine()
     PlayerX = (ctMapSize / 3) * 256;
     PlayerZ = (ctMapSize / 3) * 256;
 
-    ProcessCommandLine();
-
-
     switch (OptDayNight)
     {
     case 0:
@@ -1003,14 +874,6 @@ void InitEngine()
 
     LoadTrophy();
 
-    ProcessCommandLine();
-
-
-
-
-    //ctViewR  = 72;
-    //ctViewR1 = 28;
-    //ctViewRM = 24;
     ctViewR  = 42 + (int)(OptViewR / 8)*2;
     ctViewR1 = 28;
     ctViewRM = 24;
@@ -2089,7 +1952,9 @@ void AnimateProcesses()
 
             if (MyHealth) SaveTrophy();
             else LoadTrophy();
-            DoHalt( 0 );
+
+            //DoHalt( 0 );
+            _GameState = GAMESTATE_MAINMENU;
         }
     }
 }

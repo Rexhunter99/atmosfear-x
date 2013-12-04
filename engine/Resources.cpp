@@ -1068,6 +1068,8 @@ void GenerateMapImage()
 
 	RadarPic.Upload();
 
+	/*
+	// TODO: This SIGSEGV's at fwrite()
 	FILE* fp = fopen( "MAP.TGA", "wb" );
 
 	if ( fp )
@@ -1093,15 +1095,13 @@ void GenerateMapImage()
 		fwrite( RadarPic.m_data, 1024*1024*4, 1, fp );
 
 		fclose(fp);
-	}
+	}*/
 }
 
 
 
 void ReleaseResources()
 {
-    HeapReleased=0;
-
 	// -- Free all the textures
     for (int t=0; t<1024; t++)
     {
@@ -1149,8 +1149,7 @@ void ReleaseResources()
         RandSound[r].length = 0;
     }
 
-    free( RadarPic.m_data );
-    RadarPic.m_data = 0;
+	RadarPic.Release();
 }
 
 
@@ -1452,13 +1451,11 @@ void LoadResources()
     RenderLightMap();
 
     LoadPicture(MapPic, "huntdat/menu/images/ui_gps_frame.tga");
-    //conv_pic(MapPic);
 
     GenerateMapImage();
 
-    if (TrophyMode) LoadPictureTGA(TrophyPic, "huntdat/menu/TROPHY.TGA");
-    else LoadPictureTGA(TrophyPic, "huntdat/menu/TROPHY_G.TGA");
-    conv_pic(TrophyPic);
+    if (TrophyMode) LoadPicture(TrophyPic, "huntdat/menu/TROPHY.TGA");
+    else LoadPicture(TrophyPic, "huntdat/menu/TROPHY_G.TGA");
 
 //    ReInitGame();
 }
@@ -1616,7 +1613,7 @@ void ReleaseCharacterInfo(TCharacterInfo &chinfo)
 {
     if (!chinfo.mptr) return;
 
-	delete [] chinfo.mptr;
+	delete chinfo.mptr;
 	chinfo.mptr = 0;
 
     for (int c = 0; c<64; c++)
@@ -1629,7 +1626,7 @@ void ReleaseCharacterInfo(TCharacterInfo &chinfo)
     for (int c = 0; c<64; c++)
     {
         g_AudioDevice->freeSound( chinfo.SoundFX[c] );
-        chinfo.SoundFX[c] = 0;
+        chinfo.SoundFX[c] = SOUND_ID_INVALID;
     }
 
     chinfo.AniCount = 0;
@@ -1641,7 +1638,7 @@ void ReleaseCharacterInfo(TCharacterInfo &chinfo)
 
 void LoadCharacterInfo(TCharacterInfo &chinfo, const char* FName)
 {
-    ReleaseCharacterInfo(chinfo);
+	ReleaseCharacterInfo(chinfo);
 
     FILE* hfile = fopen(FName, "rb" );
 

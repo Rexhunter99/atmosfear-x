@@ -263,7 +263,7 @@ sound_t AudioAL::loadSound( const char* p_file )
 	if ( !fp )
 	{
 		fprintf( m_stream, "\tFailed to open the audio file \"%s\" for reading!\n", p_file );
-		return 0;
+		return 0xFFFFFFFF;
 	}
 
 	uint32_t tag = 0;
@@ -388,6 +388,7 @@ void AudioAL::freeSounds( )
 void AudioAL::freeSound( sound_t p_snd )
 {
 	if ( !m_ready ) return;
+	if ( p_snd = 0xFFFFFFFF ) return;
 
 	vector<sound_t>::iterator i=m_sounds.begin() + p_snd;
 
@@ -410,7 +411,7 @@ bool AudioAL::startLoopedVoice( sound_t p_snd )
 	#if defined( AF_DEBUG )
 	if ( !alIsBuffer( m_sounds[p_snd] ) )
 	{
-		fprintf( m_stream, "\startLoopedVoice( %u ) -> ALBuffer is invalid!\n", p_snd );
+		fprintf( m_stream, "\tstartLoopedVoice( %u ) -> ALBuffer is invalid!\n", p_snd );
 		return false;
 	}
 	#endif
@@ -420,5 +421,14 @@ bool AudioAL::startLoopedVoice( sound_t p_snd )
 	alSourcef( m_looped_voice, AL_GAIN, 1.0f );
 	alSourcei( m_looped_voice, AL_LOOPING, AL_TRUE );
 	alSourcePlay( m_looped_voice );
+	return true;
+}
+
+bool AudioAL::stopLoopedVoice( )
+{
+	if ( !m_ready ) return false;
+
+	alSourceStop( m_looped_voice );
+
 	return true;
 }

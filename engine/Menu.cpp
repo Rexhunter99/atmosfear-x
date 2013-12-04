@@ -8,6 +8,21 @@
 using namespace std;
 
 
+CMenuButton::CMenuButton()
+{
+	this->type = MI_BUTTON;
+}
+
+CMenuLabel::CMenuLabel()
+{
+	this->type = MI_NONE;
+}
+
+CMenuImage::CMenuImage()
+{
+	this->type = MI_NONE;
+}
+
 void CMenuButton::cursorEnter()
 {
 	this->pic_current = &this->pic_on;
@@ -162,13 +177,27 @@ void Menu::processEvents()
 
 		if ( cursor.x >= it->x && cursor.y >= it->y && cursor.x <= (it->x+it->w) && cursor.y <= (it->y+it->h) )
 		{
+			if ( mb[0] == GLFW_PRESS )
+			{
+				if ( it->type == MI_BUTTON )
+				{
+					switch ( it->id )
+					{
+					case 200:
+						_GameState = GAMESTATE_GAMESTART;
+						break;
+					case 202:
+						_GameState = GAMESTATE_CLOSE;
+					}
+				}
+			}
 			if ( !(it->flags & 1) )
 			{
 				it->flags |= (1 << 0);
 				it->cursorEnter();
 			}
 		}
-		else
+		else // We are not hovering over this item
 		{
 			if ( (it->flags & 1) )
 			{

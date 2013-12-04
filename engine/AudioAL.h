@@ -13,6 +13,8 @@
 typedef uint32_t	sound_t;
 typedef uint32_t	voice_t;
 
+#define SOUND_ID_INVALID		0xFFFFFFFF
+
 
 class AudioAL
 {

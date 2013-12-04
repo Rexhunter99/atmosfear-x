@@ -1668,85 +1668,86 @@ void ProcessSlide()
         }
 
 
-        void ProcessDemoMovement()
-        {
-            // == This is the camera orbit when the player dies == //
+void ProcessDemoMovement()
+{
+	// == This is the camera orbit when the player dies == //
 
-            g->BINMODE = false;
+	g->BINMODE = false;
 
-            g->PAUSE = false;
-            g->MapMode = false;
+	g->PAUSE = false;
+	g->MapMode = false;
 
-            if (DemoPoint.DemoTime>6*1000)
-                if (!g->PAUSE)
-                {
-                    g->EXITMODE = true;
-                    ResetMousePos();
-                }
+	if (DemoPoint.DemoTime>6*1000)
+		if (!g->PAUSE)
+		{
+			g->EXITMODE = true;
+			ResetMousePos();
+		}
 
-            if (DemoPoint.DemoTime>12*1000)
-            {
-                //ResetMousePos();
-                //DemoPoint.DemoTime = 0;
-                //LoadTrophy();
-                DoHalt("");
-                return;
-            }
+	if (DemoPoint.DemoTime>12*1000)
+	{
+		//ResetMousePos();
+		//DemoPoint.DemoTime = 0;
+		//LoadTrophy();
+		//DoHalt("");
+		_GameState = GAMESTATE_MAINMENU;
+		return;
+	}
 
-            VSpeed = 0.f;
+	VSpeed = 0.f;
 
-            DemoPoint.pos = Characters[DemoPoint.CIndex].pos;
+	DemoPoint.pos = Characters[DemoPoint.CIndex].pos;
 #ifdef _iceage // alacn
-            if (Characters[DemoPoint.CIndex].AI == AI_MAMM) DemoPoint.pos.y+=512;
+	if (Characters[DemoPoint.CIndex].AI == AI_MAMM) DemoPoint.pos.y+=512;
 #else
-            if (Characters[DemoPoint.CIndex].AI==AI_TREX) DemoPoint.pos.y+=512;
+	if (Characters[DemoPoint.CIndex].AI==AI_TREX) DemoPoint.pos.y+=512;
 #endif
-            DemoPoint.pos.y+=256;
+	DemoPoint.pos.y+=256;
 
-            vec3 nv = SubVectors(DemoPoint.pos,  CameraPos);
-            vec3 pp = DemoPoint.pos;
-            pp.y = CameraPos.y;
-            float l = VectorLength( SubVectors(pp,  CameraPos) );
-            float base = 824;
+	vec3 nv = SubVectors(DemoPoint.pos,  CameraPos);
+	vec3 pp = DemoPoint.pos;
+	pp.y = CameraPos.y;
+	float l = VectorLength( SubVectors(pp,  CameraPos) );
+	float base = 824;
 #ifdef _iceage // alacn
-            if (Characters[DemoPoint.CIndex].AI == AI_MAMM) base+=512;
+	if (Characters[DemoPoint.CIndex].AI == AI_MAMM) base+=512;
 #else
-            if (Characters[DemoPoint.CIndex].AI==AI_TREX) base=1424;
+	if (Characters[DemoPoint.CIndex].AI==AI_TREX) base=1424;
 #endif
 
-            if (DemoPoint.DemoTime==1)
-                if (l < base) DemoPoint.DemoTime = 2;
-            NormVector(nv, 1.0f);
+	if (DemoPoint.DemoTime==1)
+		if (l < base) DemoPoint.DemoTime = 2;
+	NormVector(nv, 1.0f);
 
-            if (DemoPoint.DemoTime == 1)
-            {
-                DeltaFunc(CameraX, DemoPoint.pos.x, (float)fabs(nv.x) * TimeDt * 3.f);
-                DeltaFunc(CameraZ, DemoPoint.pos.z, (float)fabs(nv.z) * TimeDt * 3.f);
-            }
-            else
-            {
-                DemoPoint.DemoTime+=TimeDt;
-                CameraAlpha+=TimeDt / 1224.f;
-                ca = (float)cos(CameraAlpha);
-                sa = (float)sin(CameraAlpha);
-                //float k = (base - l) / 350.f;
-                DeltaFunc(CameraX, DemoPoint.pos.x  - sa * base, (float)TimeDt );
-                DeltaFunc(CameraZ, DemoPoint.pos.z  + ca * base, (float)TimeDt );
-            }
+	if (DemoPoint.DemoTime == 1)
+	{
+		DeltaFunc(CameraX, DemoPoint.pos.x, (float)fabs(nv.x) * TimeDt * 3.f);
+		DeltaFunc(CameraZ, DemoPoint.pos.z, (float)fabs(nv.z) * TimeDt * 3.f);
+	}
+	else
+	{
+		DemoPoint.DemoTime+=TimeDt;
+		CameraAlpha+=TimeDt / 1224.f;
+		ca = (float)cos(CameraAlpha);
+		sa = (float)sin(CameraAlpha);
+		//float k = (base - l) / 350.f;
+		DeltaFunc(CameraX, DemoPoint.pos.x  - sa * base, (float)TimeDt );
+		DeltaFunc(CameraZ, DemoPoint.pos.z  + ca * base, (float)TimeDt );
+	}
 
-            float b = FindVectorAlpha( (float)
-                                       sqrt ( (DemoPoint.pos.x - CameraX)*(DemoPoint.pos.x - CameraX) +
-                                              (DemoPoint.pos.z - CameraZ)*(DemoPoint.pos.z - CameraZ) ),
-                                       DemoPoint.pos.y - CameraY - 400.f);
-            if (b>pi) b = b - 2*pi;
-            DeltaFunc(CameraBeta, -b , TimeDt / 4000.f);
+	float b = FindVectorAlpha( (float)
+							   sqrt ( (DemoPoint.pos.x - CameraX)*(DemoPoint.pos.x - CameraX) +
+									  (DemoPoint.pos.z - CameraZ)*(DemoPoint.pos.z - CameraZ) ),
+							   DemoPoint.pos.y - CameraY - 400.f);
+	if (b>pi) b = b - 2*pi;
+	DeltaFunc(CameraBeta, -b , TimeDt / 4000.f);
 
 
 
-            float h = GetLandQH(CameraX, CameraZ);
-            DeltaFunc(CameraY, h+128, TimeDt / 8.f);
-            if (CameraY < h + 256) CameraY = h + 256; //80
-        }
+	float h = GetLandQH(CameraX, CameraZ);
+	DeltaFunc(CameraY, h+128, TimeDt / 8.f);
+	if (CameraY < h + 256) CameraY = h + 256; //80
+}
 
 
         void ProcessControls()
@@ -2202,93 +2203,24 @@ void ProcessGame()
 #include "Menu.hpp"
 
 
-int main( int argc, char *argv[] )
+bool LoadGame()
 {
-	Menu mobj;
-
-    // -- Unix needs us to set the working directory to the directory where the binary is.
-    InitWorkingDirectory();
-
-	// -- Lord knows what I was doing with this!
-	AFLog console( );
-
-	// -- Store the args
-	g->argc = argc;
-	g->argv = argv;
-
-#if defined( AF_PLATFORM_LINUX )
-	// -- Initialise GTK
-	gtk_init( &argc, &argv );
-#endif
-
-	// -- Create the Log file
-	CreateLog();
-
-	// -- Process the command line
-	ProcessCommandLine();
-
-	// -- Create the main window
-	if ( !CreateMainWindow() )
-	{
-		CloseLog();
-		if ( hvideolog ) fclose( hvideolog );
-		glfwTerminate();
-		return 1000;	// <- Bad Window Error
-	}
-
-	// Zero the pointers
-	for ( int i=0; i<1024; ++i )
-	{
-		Textures[i] = 0;
-		if ( i < 255 ) MObjects[i].model = 0;
-	}
-
-	memset( MessageList, 0, sizeof(TMessageList)*32 );
-
-	// -- Create the Audio Renderer
-	g_AudioDevice = new AudioAL( );
-
-	// -- Initialise interfaces
-	Init3DHardware();
-	InitXboxController();
-	InitEngine();
-	g_AudioDevice->init( 32 );
-
-	// -- Activate the Graphics interface
-	Activate3DHardware();
-
-	mobj.loadScript( "huntdat/menu/main_menu.menu" );
-	mscMenu = g_AudioDevice->loadSound( "huntdat/soundfx/menutheme.wav" );
-
-	glDisable( GL_ALPHA_TEST );
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-	g_AudioDevice->startLoopedVoice( mscMenu );
-
-	while ( glfwGetWindowParam( GLFW_OPENED ) )
-	{
-		mobj.processEvents();
-
-		glClear( GL_COLOR_BUFFER_BIT );
-		mobj.draw();
-		glfwSwapBuffers();
-	}
-	goto ENDGAME;
-
 	StartLoading();
 	PrintLoad("Loading...");
 
 	PrintLog("== Loading resources ==\n");
 
-
 	PrintLog("Loading common resources:");
 	PrintLoad("Loading common resources: 3DF Files");
 
 	if (OptDayNight==2)
+	{
 		LoadModelEx(SunModel,    "huntdat/moon.3df");
+	}
 	else
+	{
 		LoadModelEx(SunModel,    "huntdat/sun.3df");
+	}
 
 	LoadModelEx(CompasModel, "huntdat/compass.3df");
 	LoadModelEx(Binocular,   "huntdat/binocs.3df");
@@ -2324,26 +2256,17 @@ int main( int argc, char *argv[] )
 	PrintLoad("Loading common resources: Image Files");
 
 	LoadPicture(PausePic,   "huntdat/menu/PAUSE.TGA");
-	conv_pic(PausePic);
 	LoadPicture(ExitPic,    "huntdat/menu/EXIT.TGA");
-	conv_pic(ExitPic);
 	LoadPicture(TrophyExit, "huntdat/menu/TROPHY_E.TGA");
-	conv_pic(TrophyExit);
 	LoadPicture(MapPic,     "huntdat/menu/images/ui_gps_frame.tga");
 
 	LoadPicture(TFX_ENVMAP,    "huntdat/fx/ENVMAP.TGA");
-	ApplyAlphaFlags((uint16_t*)(TFX_ENVMAP.m_data), TFX_ENVMAP.m_width*TFX_ENVMAP.m_width);
 	LoadPicture(TFX_SPECULAR,  "huntdat/fx/SPECULAR.TGA");
-	ApplyAlphaFlags((uint16_t*)(TFX_SPECULAR.m_data), TFX_SPECULAR.m_width*TFX_SPECULAR.m_width);
-
 
 	PrintLog(" Done.\n");
 
 	PrintLoad("Loading area...");
 	LoadResources();
-
-	PrintLoad( "Starting Game Network..." );
-	InitializeNetwork();
 
 	PrintLoad( "Starting Game..." );
 	PrintLog("Loading area: Done.\n");
@@ -2357,7 +2280,74 @@ int main( int argc, char *argv[] )
 	ReInitGame();
 	//glfwDisable( GLFW_MOUSE_CURSOR );
 
+	return true;
+}
+
+int main( int argc, char *argv[] )
+{
+	Menu mobj;
+
+    // -- Unix needs us to set the working directory to the directory where the binary is.
+    InitWorkingDirectory();
+
+	// -- Store the args
+	g->argc = argc;
+	g->argv = argv;
+
+#if defined( _USE_GTK )
+	// -- Initialise GTK
+	gtk_init( &argc, &argv );
+#endif
+
+	// -- Create the Log file
+	CreateLog();
+
+	// -- Initialise Engine
+	InitEngine();
+
+	// -- Process the command line
+	ProcessCommandLine();
+
+	// -- Create the main window
+	if ( !CreateMainWindow() )
+	{
+		CloseLog();
+		if ( hvideolog ) fclose( hvideolog );
+		glfwTerminate();
+		return 1000;	// <- Bad Window Error
+	}
+
+	// Zero the pointers
+	for ( int i=0; i<1024; ++i )
+	{
+		Textures[i] = 0;
+		if ( i < 255 ) MObjects[i].model = 0;
+	}
+
+	memset( MessageList, 0, sizeof(TMessageList)*32 );
+
+	// -- Create the Audio Renderer
+	g_AudioDevice = new AudioAL( );
+
+	// -- Initialise interfaces
+	Init3DHardware();
+	InitXboxController();
+	InitializeNetwork();
+	g_AudioDevice->init( 32 );
+
+	// -- Activate the Graphics interface
 	Activate3DHardware();
+
+	// -- Initialise some menu stuff
+	// TODO: Move this
+	mobj.loadScript( "huntdat/menu/main_menu.menu" );
+	mscMenu = g_AudioDevice->loadSound( "huntdat/soundfx/menutheme.wav" );
+
+	glDisable( GL_ALPHA_TEST );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	g_AudioDevice->startLoopedVoice( mscMenu );
 
 	PrintLog("Entering messages loop.\n");
 
@@ -2367,33 +2357,51 @@ int main( int argc, char *argv[] )
 
 	while( true )
 	{
-		/*
-		Menu Process
-		*/
-		if (QUITMODE==1 || !glfwGetWindowParam( GLFW_OPENED ) )
+		if ( _GameState == GAMESTATE_CLOSE )
 		{
-			ShutDown3DHardware();
-			g_AudioDevice->shutdown();
-			delete g_AudioDevice;
-			g_AudioDevice = 0;
-			QUITMODE=2;
 			break;
 		}
-		if (!QUITMODE)
+		else if ( _GameState == GAMESTATE_MAINMENU )
 		{
-			if ( !glfwGetWindowParam( GLFW_ICONIFIED ) )
+			// -- If the window is closed, we need to stop
+			if ( !glfwGetWindowParam( GLFW_OPENED ) ) break;
+
+			mobj.processEvents();
+
+			glClear( GL_COLOR_BUFFER_BIT );
+
+			mobj.draw();
+
+			glfwSwapBuffers();
+		}
+		else if ( _GameState == GAMESTATE_GAMESTART )
+		{
+			g_AudioDevice->stopLoopedVoice( );
+			LoadGame();
+			_GameState = GAMESTATE_INGAME;
+		}
+		else if ( _GameState == GAMESTATE_INGAME )
+		{
+			if ( !glfwGetWindowParam( GLFW_OPENED ) )
 			{
-				//glfwEnable( GLFW_MOUSE_CURSOR );
-				ProcessGame();
+				break;
 			}
 			else
 			{
-				glfwSleep( 1.0 ); // Sleep for 1 second
+				if ( !glfwGetWindowParam( GLFW_ICONIFIED ) )
+				{
+					//glfwEnable( GLFW_MOUSE_CURSOR );
+					ProcessGame();
+				}
+				else
+				{
+					glfwSleep( 1.0 ); // Sleep for 1 second
+				}
 			}
 		}
 	}
 
-ENDGAME:
+	PrintLog("Game normal shutdown.\n");
 
 #if defined( USE_XBOXCONTROLLER )
 	ControllerRelease();
@@ -2405,10 +2413,10 @@ ENDGAME:
 		delete g_AudioDevice;
 	}
 
+	ShutDown3DHardware();
 	ShutdownNetwork();
 	ShutDownEngine();
 	glfwEnable( GLFW_MOUSE_CURSOR );
-	PrintLog("Game normal shutdown.\n");
 
 	CloseLog();
 	fclose( hvideolog );

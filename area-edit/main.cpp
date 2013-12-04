@@ -130,7 +130,7 @@ void KeyboardProcess()
 		Camera.Yaw -= 1.0f;
 		if ( Camera.Yaw <= -1.0f ) Camera.Yaw = 360.0f;
 	}
-	if (GetKeyState(VK_UP) & 0x8000) { 
+	if (GetKeyState(VK_UP) & 0x8000) {
 		Camera.Pitch += 1.0f;
 		if ( Camera.Pitch >= 89.0f ) Camera.Pitch = 89.0f;
 	}
@@ -245,7 +245,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     g_Menu.AddItem(0,"Save\tCtrl+S",ID_SAVE );
     g_Menu.AddItem(0,"Save As\tCtrl+A",ID_SAVEAS );
     g_Menu.AddSeparator(0);
-	
+
 	// File->Recent Files
 	g_Menu.AddPopup(0, "Recent Files" );
 	g_Menu.AddItem(4, "AREA2.prj", ID_RECENT1);
@@ -319,7 +319,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_TabControl.AddTab("Textures");
 		g_TabControl.AddTab("Objects");
     }
-    
+
 	int StatusWidths[] = {200, 250, 450, -1};
 	int StatusHeight = 0;
 	g_StatBar.Create( hwnd, 2500 );
@@ -636,7 +636,7 @@ BOOL CALLBACK AboutDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
         switch (LOWORD(wParam))
         {
             case ABT_OK:
-				EndDialog(hwnd, wParam); 
+				EndDialog(hwnd, wParam);
                 return TRUE;
         }
         break;
@@ -861,7 +861,7 @@ bool LoadResources( LPSTR FileName )
 
 	fread( &Resources.NumTextures, 4, 1, fp );
 	fread( &Resources.NumObjects, 4, 1, fp );
-	
+
 	fread( &Resources.DawnBG_R, 4, 1, fp);
 	fread( &Resources.DawnBG_G, 4, 1, fp);
 	fread( &Resources.DawnBG_B, 4, 1, fp);
@@ -964,7 +964,7 @@ bool LoadResources( LPSTR FileName )
 			fread( &Resources.Objects[i].Animation.NumFrames, 4, 1, fp );
 			for ( int a=0; a<Resources.Objects[i].Animation.NumFrames; ++a )
 			{
-				fread( Resources.Objects[i].Animation.Frames[a].Vertices, sizeof(TSVERTEX), Resources.Objects[i].NumVerts, fp ); 
+				fread( Resources.Objects[i].Animation.Frames[a].Vertices, sizeof(TSVERTEX), Resources.Objects[i].NumVerts, fp );
 			}
 		}
 	}

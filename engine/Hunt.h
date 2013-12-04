@@ -7,8 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#if defined( AF_PLATFORM_LINUX )
+#ifdef _USE_GTK
 #	include <gtk/gtk.h>
+#endif // _USE_GTK
+
+#if defined( AF_PLATFORM_LINUX )
 #	include <GL/glew.h>
 #	include <GL/glxew.h>
 #	include <GL/glfw.h>
@@ -101,6 +104,7 @@ enum gamestate_e {
 	GAMESTATE_MAINMENU		=-1,
 	GAMESTATE_GAMESTART		= 0,
 	GAMESTATE_INGAME		= 1,
+	GAMESTATE_CLOSE,
 };
 
 /* Particle type constants */

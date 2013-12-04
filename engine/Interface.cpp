@@ -131,9 +131,11 @@ void DoHalt(const char* Mess)
 		g_AudioDevice->shutdown();
 		delete g_AudioDevice;
 		ShutdownNetwork();
-#if defined( AF_PLATFORM_WINDOWS )
+		MessageBox(NULL, Mess, "Carnivores Termination", 0 );//MB_OK | MB_SYSTEMMODAL | MB_ICONEXCLAMATION);
+/*#if defined( AF_PLATFORM_WINDOWS )
 		MessageBox(NULL, Mess, "Carnivores Termination", MB_OK | MB_SYSTEMMODAL | MB_ICONEXCLAMATION);
 #elif defined( AF_PLATFORM_LINUX )
+#ifdef _USE_GTK
 		GtkWidget* msgbox = gtk_message_dialog_new( NULL,
 													GTK_DIALOG_DESTROY_WITH_PARENT,
 													GTK_MESSAGE_ERROR,
@@ -145,7 +147,8 @@ void DoHalt(const char* Mess)
 			gtk_dialog_run(GTK_DIALOG( msgbox ) );
 			gtk_widget_destroy( msgbox );
 		}
-#endif
+#endif // _USE_GTK
+#endif*/
 		CloseLog();
 		glfwEnable( GLFW_MOUSE_CURSOR );
 		glfwCloseWindow();
@@ -156,6 +159,7 @@ void DoHalt(const char* Mess)
 	else
 	{
 		QUITMODE=1;
+		_GameState = GAMESTATE_MAINMENU;
 	}
 
 }
@@ -204,17 +208,8 @@ GLuint LoadingTexture;
 void StartLoading()
 {
 	//LoadPicture(LoadWall,   "huntdat/menu/LOADBANNER.BMP");
-
     LoadPicture(LoadWall,   "huntdat/menu/LOADBANNER.TGA"); // 24-bit TARGA Loading Image
     //LoadPicture(LoadWall,   "huntdat/menu/LOADING.TGA");
-
-	int s_w = 800, s_h = 600;
-
-	GetScreenSize( &s_w, &s_h );
-
-	glfwSetWindowPos( (s_w - LoadWall.m_width)/2, (s_h - LoadWall.m_height)/2 );
-	glfwSetWindowSize( LoadWall.m_width, LoadWall.m_height );
-
 }
 
 void EndLoading()

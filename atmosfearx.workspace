@@ -3,5 +3,6 @@
 	<Workspace title="AtmosFEAR X">
 		<Project filename="engine/engine.cbp" />
 		<Project filename="server/server.cbp" />
+		<Project filename="area-edit/Carnivores Area Editor.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>
