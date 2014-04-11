@@ -620,6 +620,8 @@ void oglDrawBox(int x1, int y1, int x2, int y2, uint32_t color)
 {
 	// -> Draw a filled rectangle
 
+	oglSetTexture( 0 );
+
 	glBegin(GL_QUADS);
 
 	glColor4ubv((GLubyte*)&color);
@@ -713,7 +715,7 @@ void oglSetTexture( GLuint Texture )
 	TextureBinds++;
 }
 
-void oglTextOut(int x,int y, char *text,uint32_t color)
+void oglTextOut(int x,int y, const char *text,uint32_t color)
 {
 	// -> Outputs text to the OpenGL Scene
 

@@ -19,13 +19,17 @@
 				<Option host_application="primusrun" />
 				<Option run_host_application_in_terminal="0" />
 				<Compiler>
+					<Add option="-std=c++11" />
+					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-ffast-math" />
 					<Add option="-DAF_DEBUG" />
 					<Add option="-DAF_PLATFORM_LINUX" />
 					<Add option="-D_LINUX" />
 					<Add option="-D_DEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="-pg" />
 					<Add option="-lrt" />
 					<Add option="-lGLEW" />
 					<Add option="-lglfw" />
@@ -33,6 +37,7 @@
 					<Add option="-lGL" />
 					<Add option="-lX11" />
 					<Add option="-lopenal" />
+					<Add option="-lpng" />
 				</Linker>
 			</Target>
 			<Target title="Debug-Nix-GTK">
@@ -72,7 +77,8 @@
 				<Option compiler="gcc" />
 				<Option parameters="prj=HUNTDAT/AREAS/AREA2 din=8 wep=255 dtm=0 -radar -double -debug -supply -window" />
 				<Compiler>
-					<Add option="`pkg-config gtk+-2.0 --cflags`" />
+					<Add option="-std=c++11" />
+					<Add option="-ffast-math" />
 					<Add option="-DAF_RELEASE" />
 					<Add option="-DAF_PLATFORM_LINUX" />
 					<Add option="-D_LINUX" />
@@ -111,6 +117,7 @@
 					<Add option="-lopengl32" />
 					<Add option="-lglu32" />
 					<Add option="-lopenal32" />
+					<Add option="-lws2_32" />
 				</Linker>
 			</Target>
 			<Target title="Release-Win">
@@ -131,6 +138,7 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="-pg -lgmon" />
 					<Add option="-pg" />
 					<Add option="-lgdi32" />
 					<Add option="-lglew32s" />
@@ -138,6 +146,7 @@
 					<Add option="-lopengl32" />
 					<Add option="-lglu32" />
 					<Add option="-lopenal32" />
+					<Add option="-lws2_32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -150,31 +159,13 @@
 		<Unit filename="AIIguanodon.hpp">
 			<Option virtualFolder="AI/" />
 		</Unit>
-		<Unit filename="Audio.cpp">
-			<Option virtualFolder="Audio/" />
-		</Unit>
 		<Unit filename="AudioAL.cpp">
 			<Option virtualFolder="Audio/" />
 		</Unit>
 		<Unit filename="AudioAL.h">
 			<Option virtualFolder="Audio/" />
 		</Unit>
-		<Unit filename="AudioALSA.cpp">
-			<Option compile="0" />
-			<Option link="0" />
-			<Option virtualFolder="Audio/" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="AudioDriver.h">
-			<Option virtualFolder="Audio/" />
-		</Unit>
-		<Unit filename="AudioMM.cpp">
-			<Option compile="0" />
-			<Option link="0" />
-			<Option virtualFolder="Audio/" />
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="AudioSoft.h">
 			<Option virtualFolder="Audio/" />
 		</Unit>
 		<Unit filename="Characters.cpp">
@@ -188,7 +179,9 @@
 			<Option virtualFolder="Game/" />
 		</Unit>
 		<Unit filename="Globals.h" />
-		<Unit filename="Hunt.h" />
+		<Unit filename="Hunt.h">
+			<Option virtualFolder="Game/" />
+		</Unit>
 		<Unit filename="Hunt2.cpp">
 			<Option virtualFolder="Game/" />
 		</Unit>
@@ -205,10 +198,11 @@
 		<Unit filename="Menu.hpp">
 			<Option virtualFolder="Game/" />
 		</Unit>
-		<Unit filename="Netcode.cpp">
+		<Unit filename="Netcode.cpp" />
+		<Unit filename="Network.cpp">
 			<Option virtualFolder="Network/" />
 		</Unit>
-		<Unit filename="Network.cpp">
+		<Unit filename="Network.h">
 			<Option virtualFolder="Network/" />
 		</Unit>
 		<Unit filename="Platform.h">
@@ -251,10 +245,17 @@
 		<Unit filename="text[RU].txt">
 			<Option virtualFolder="Resources/" />
 		</Unit>
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
 			<envvars />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" use_define="0" update_manifest="1" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="1" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" />
+				<Code header_guard="VERSION_H" namespace="Version" prefix="" />
+			</AutoVersioning>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

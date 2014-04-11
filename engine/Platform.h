@@ -105,8 +105,19 @@ inline int MessageBox( void* p_hwnd, const char* p_text, const char* p_caption, 
 		while ( tok )
 		{
 			printf( "MessageBox :: tok = \"%s\"\n", tok );
-			if ( GetTextW( tok ) > tx ) tx = GetTextW( tok );
-			lines.push_back( tok );
+			std::string s = tok;
+
+			for ( int i=0; i<s.size(); i++ )
+			{
+				if ( s.at( i ) == '\t' )
+				{
+					s.replace( i, 1, "    " );
+				}
+			}
+
+			if ( GetTextW( s.c_str() ) > tx ) tx = GetTextW( s.c_str() );
+
+			lines.push_back( s );
 			tok = strtok( NULL, "\n" );
 		}
 
@@ -228,6 +239,8 @@ inline int MessageBox( void* p_hwnd, const char* p_text, const char* p_caption, 
 }
 
 #else // Windows
+
+#include <Windows.h>
 
 inline int GetScreenSize( int* x, int* y )
 {

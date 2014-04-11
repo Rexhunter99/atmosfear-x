@@ -180,12 +180,12 @@ typedef struct bgra_t {
      uint8_t		A;
 } bgra_t;
 
-typedef struct tagMessageList {
-   int32_t			mTimeLeft;
-   int32_t			mTimeStart;
-   rgba_t		    m_color;
-   char				mtext[512];
-} TMessageList;
+class TMessageList
+{
+public:
+	uint32_t		m_color;
+	std::string		m_text;
+};
 
 typedef struct _Animation {
     char            aniName[32];
@@ -283,7 +283,7 @@ public:
 				m_cheight;  // True canvas dimensions (used in Textures)
 	uint16_t	m_bpp;
 
-	void Allocate();
+	void Allocate( void* p_data = 0 );
 	void Release();
 	void Upload();
 
@@ -657,7 +657,8 @@ public:
 			Fall,				// Does it fall like an arrow? (does not work)
 			TraceC,				// Number of tracers per shot
 			Reload;				// How many times can it fire before needing to reload?
-	float	Zoom,				// Zoom level of weapon when aiming (1.0==None)
+	float	ZoomT,
+			Zoom,				// Zoom level of weapon when aiming (1.0==None)
 			Range;				// Range of tracer(s) (Does not work)
 
 	bool	CrossHair;			// Does this weapon have a crosshair?
@@ -668,7 +669,7 @@ public:
 	TWeapInfo()
 	{
 		Range = 1.0f;
-		Zoom = 1.0f;
+		ZoomT = Zoom = 1.0f;
 		CrossHair = 0;
 		CrossHairType = 0;
 		CrossHairColor = 0x8000AF10;
@@ -847,8 +848,7 @@ int         TraceLook(  float ax, float ay, float az,
 void    CheckCollision(float&, float&);
 float   CalcFogLevel(vec3 v);
 //=================================================================//
-void    AddMessage(const char* mt);
-void	AddMessage(const char* mt, float Seconds);
+void	AddMessage( std::string p_message, uint32_t p_color = 0xFFFFFFFF );
 void    CreateTMap();
 
 
@@ -870,7 +870,7 @@ void    conv_pic(TPicture &pic);
 void    LoadPicture(TPicture &pic, const char* pname);
 void    LoadPictureBMP(TPicture &pic, const char* pname);
 void    LoadPictureTGA(TPicture &pic, const char* pname);
-void	LoadPicturePNG(TPicture &pic, const char* pname);
+void	LoadPicturePNG(TPicture &pic, std::string p_filename );
 void    LoadCharacterInfo(TCharacterInfo&, const char*);
 void    LoadModelEx(TModel* &mptr, char* FName);
 void    LoadModel(TModel*&);
@@ -937,13 +937,13 @@ _EXTORNOT   int   TotalC, TotalW;
 
 //========== common ==================//
 
-_EXTORNOT   bool    blActive;
-_EXTORNOT   uint8_t    KeyboardState[256];
-_EXTORNOT   int     KeyFlags, _shotcounter;
+_EXTORNOT   bool						blActive;
+_EXTORNOT   uint8_t						KeyboardState[256];
+_EXTORNOT   int							KeyFlags, _shotcounter;
 
-_EXTORNOT   TMessageList MessageList[32];
-_EXTORNOT   char    ProjectName[128];
-_EXTORNOT   int     _GameState;
+_EXTORNOT   std::vector<std::string>	MessageList;
+_EXTORNOT   char						ProjectName[128];
+_EXTORNOT   int							_GameState;
 _EXTORNOT   sound_t		fxCall[10][3],
 						fxUnderwater, fxWaterIn, fxWaterOut, fxJump, fxStep[3], fxStepW[3],
 						fxScream[4], mscMenu;

@@ -5,6 +5,9 @@
 #include <stdint.h>
 
 
+class Menu;
+
+
 enum menustates_e
 {
     // Enum Starts at 1000, for menu scripting
@@ -53,7 +56,7 @@ public:
 	virtual void click(){};
 	virtual void cursorEnter(){};
 	virtual void cursorLeave(){};
-	virtual void draw() = 0;
+	virtual void draw( ) = 0;
 
 	uint32_t	x,
 				y,
@@ -64,6 +67,8 @@ public:
 
 	bool		active;
 	uint32_t	flags;
+
+	Menu*		owner;
 };
 
 class CMenuButton : public CMenuItem
@@ -77,7 +82,7 @@ public:
 
 	void cursorEnter();
 	void cursorLeave();
-	void draw();
+	void draw( );
 };
 
 class CMenuLabel : public CMenuItem
@@ -87,7 +92,7 @@ public:
 
     CMenuLabel();
 
-	void draw();
+	void draw( );
 };
 
 class CMenuImage : public CMenuItem
@@ -97,7 +102,22 @@ public:
 
 	CMenuImage();
 
-	void draw();
+	void draw( );
+};
+
+class CMenuRange : public CMenuItem
+{
+public:
+	CMenuRange();
+	~CMenuRange();
+
+	void		draw( );
+	void		addItem( std::string p_item );
+	std::string	getSelectedItem();
+
+private:
+
+	std::vector<std::string>	m_items;
 };
 
 
@@ -107,6 +127,8 @@ public:
 	uint32_t				MenuState = MENU_SPLASH;
 	TPicture    			MenuBackground;
 	std::vector<CMenuItem*>	MenuItems;
+    float					MenuScale;
+    int						TargetW, TargetH;
 
 	Menu();
 	~Menu();

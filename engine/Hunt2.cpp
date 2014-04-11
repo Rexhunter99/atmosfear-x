@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "VideoOptions.h"
 #include "IniFile.h"
+#include "Network.h"
 
 #include <math.h>
 #include <time.h>
@@ -1246,11 +1247,11 @@ bool CreateMainWindow()
 	int window_mode = GLFW_WINDOW;
 	glfwOpenWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #else
-	int window_mode = GLFW_FULLSCREEN;
+	int window_mode = GLFW_WINDOW; //GLFW_FULLSCREEN;
 #endif
 
 	glfwOpenWindowHint( GLFW_OPENGL_VERSION_MAJOR, 2 );
-	glfwOpenWindowHint( GLFW_OPENGL_VERSION_MINOR, 1 );
+	glfwOpenWindowHint( GLFW_OPENGL_VERSION_MINOR, 0 );
 	//glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 2 );
 
 	if ( Windowed )
@@ -2043,11 +2044,23 @@ SKIPYMOVE:
                 CameraW*=3.0f;
                 CameraH*=3.0f;
             }
-            else if ( Weapon.state == 2 )
-            {
-                CameraW *= WeapInfo[CurrentWeapon].Zoom;
-                CameraH *= WeapInfo[CurrentWeapon].Zoom;
-            }
+            else
+			{
+				if ( Weapon.state == 2 )
+				{
+					WeapInfo[CurrentWeapon].ZoomT += TimeDt / 200.0f;
+					if ( WeapInfo[CurrentWeapon].ZoomT > WeapInfo[CurrentWeapon].Zoom )
+						WeapInfo[CurrentWeapon].ZoomT = WeapInfo[CurrentWeapon].Zoom;
+				}
+				else
+				{
+					WeapInfo[CurrentWeapon].ZoomT -= TimeDt / 200.0f;
+					if ( WeapInfo[CurrentWeapon].ZoomT < 1.0f )
+						WeapInfo[CurrentWeapon].ZoomT = 1.0f;
+				}
+				CameraW *= WeapInfo[CurrentWeapon].ZoomT;
+				CameraH *= WeapInfo[CurrentWeapon].ZoomT;
+			}
 
             FOVK = CameraW / (VideoCX*1.25f);
 
@@ -2329,7 +2342,7 @@ int main( int argc, char *argv[] )
 		if ( i < 255 ) MObjects[i].model = 0;
 	}
 
-	memset( MessageList, 0, sizeof(TMessageList)*32 );
+	MessageList.clear();
 
 	// -- Create the Audio Renderer
 	g_AudioDevice = new AudioAL( );
@@ -2356,6 +2369,9 @@ int main( int argc, char *argv[] )
 
 	g_AudioDevice->startLoopedVoice( mscMenu );
 
+	HttpRequest hr;
+	hr.open( HttpRequest::HTTP_GET, "www.thecarnivoressaga.com/atmosfearx-db.txt" );
+
 	PrintLog("Entering messages loop.\n");
 
 	StepStart = glfwGetTime()/1000.0;
@@ -2372,13 +2388,26 @@ int main( int argc, char *argv[] )
 		{
 			// -- If the window is closed, we need to stop
 			if ( !glfwGetWindowParam( GLFW_OPENED ) ) break;
+			int window_w, window_h;
 
 			mobj.processEvents();
 
+			// -- Clear the buffers and set the viewport
 			glClear( GL_COLOR_BUFFER_BIT );
+			glfwGetWindowSize( &window_w, &window_h );
+			glViewport( 0,0, window_w, window_h );
 
+			// -- Update the Projection and World matrices
+			glMatrixMode( GL_PROJECTION );
+			glLoadIdentity();
+			glOrtho( 0, window_w, window_h, 0, -100, 100 );
+			glMatrixMode( GL_MODELVIEW );
+			glLoadIdentity();
+
+			// -- Invoke the meny drawing event (handles all menu items)
 			mobj.draw();
 
+			// -- Swap the front/back buffers
 			glfwSwapBuffers();
 		}
 		else if ( _GameState == GAMESTATE_GAMESTART )
@@ -2667,7 +2696,7 @@ void GLFWCALL KeyboardInput( int key, int action )
                 }
                 else if (!strcmp( tok, "clear" ) || !strcmp( tok, "cls" ))
                 {
-                	memset( MessageList, 0, sizeof(TMessageList)*32 );
+                	MessageList.clear();
                 }
                 else if (!strcmp( tok, "help" ) || !strcmp( tok, "?" ))
                 {

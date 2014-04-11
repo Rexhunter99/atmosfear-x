@@ -1,8 +1,13 @@
 #include "Hunt.h"
 #include "ImageTypes.h"
+#include <png.h>
 #include <stdio.h>
 #include <string.h>
 #include "gl_extra.h"
+
+#include <string>
+
+using namespace std;
 
 FILE* hfile;
 
@@ -11,26 +16,13 @@ void GenerateModelMipMaps(TModel *mptr);
 void GenerateAlphaFlags(TModel *mptr);
 
 
-void AddMessage( const char* mt, float Seconds)
+void AddMessage( string p_message, uint32_t p_color )
 {
-    // -- [RH99] Old Code:
-    /*
-    MessageList[0].timeleft = timeGetTime() + 5 * 1000;
-    lstrcpy(MessageList[0].mtext, mt);
-    */
-
-    // -- [RH99] New Code:
-    if ( mt == 0 ) return;
-    bool printed = false;
-
-    memcpy( &MessageList[1], &MessageList[0], sizeof(TMessageList)*31 );
-	MessageList[0].m_color = rgba_t( 255,255,255, 255 ); // Change this based on command
-	strcpy( MessageList[0].mtext, mt );
-}
-
-void AddMessage( const char* mt)
-{
-    AddMessage( mt, 5.0f );
+	TMessageList msg;
+	msg.m_text = p_message;
+	msg.m_color = p_color;
+	//MessageList.insert( MessageList.begin(), msg );
+	MessageList.push_back( p_message );
 }
 
 void PlaceHunter()
@@ -883,7 +875,7 @@ void LoadPicture(TPicture &pic, const char* pname)
     }
     else if ( strstr( fname, ".png" ) )
     {
-		fprintf( hlog, "WARNING: PNG Files are not supported yet.\n" );
+		LoadPicturePNG( pic, string( pname ) );
     }
     else if ( strstr( fname, ".aft" ) )		// AtmosFEAR Texture File
     {
@@ -918,15 +910,24 @@ void LoadPictureBMP(TPicture &pic, const char* pname)
 
     fread( &bmpFH, sizeof( BITMAPFILEHEADER ), 1, hfile );
     fread( &bmpIH, sizeof( BITMAPINFOHEADER ), 1, hfile );
+    fseek( hfile, bmpFH.bfOffBits, SEEK_SET );
 
 	pic.m_width =			(uint16_t)bmpIH.biWidth;
     pic.m_height=			(uint16_t)bmpIH.biHeight;
     pic.m_bpp	=			(uint16_t)bmpIH.biBitCount;
 
+    fprintf( stdout, "LoadPictureBMP :: %u %u %u %u/%u\n", pic.m_width, pic.m_height, pic.m_bpp, (pic.m_width*(pic.m_bpp/8)*pic.m_height), bmpIH.biSizeImage );
+
     pic.Release();
     pic.Allocate();
 
-    fread( pic.m_data, pic.m_width*(pic.m_bpp/8)*pic.m_height, 1, hfile );
+    //fread( pic.m_data, pic.m_width*(pic.m_bpp/8)*pic.m_height, 1, hfile );
+
+    // -- Read the data from the file
+    for ( int y=pic.m_height-1; y>=0; y-- )
+    {
+		fread( (uint8_t*)pic.m_data + ( (pic.m_width*(pic.m_bpp/8))*y ), pic.m_width*(pic.m_bpp/8), 1, hfile );
+    }
 
     fclose( hfile );
 }
@@ -945,9 +946,7 @@ void LoadPictureTGA(TPicture &pic, const char* pname)
     FILE*		hfile;
     TARGAFILEHEADER tga;
 
-    hfile = fopen( pname, "rb" );
-
-    if( !hfile )
+    if( !(hfile = fopen( pname, "rb" )) )
     {
         char sz[512];
         sprintf( sz, "Error opening picture file\n%s", pname );
@@ -978,6 +977,157 @@ void LoadPictureTGA(TPicture &pic, const char* pname)
     	Close the file handle
     */
     fclose( hfile );
+}
+
+void LoadPicturePNG( TPicture& pic, string p_filename )
+{
+	//header for testing if it is a png
+	png_byte header[8];
+
+	//open file as binary
+	FILE *fp = fopen( p_filename.c_str(), "rb");
+	if (!fp)
+	{
+		char sz[512];
+        sprintf( sz, "Error opening picture file\n%s\n", p_filename.c_str() );
+        DoHalt(sz);
+		return;
+	}
+
+	//read the header
+	fread(header, 1, 8, fp);
+
+	//test if png
+	if ( !(!png_sig_cmp(header, 0, 8)) )
+	{
+		fclose(fp);
+		DoHalt( "LoadPicturePNG()\nThe specified file is not a valid PNG.\n" );
+		return;
+	}
+
+	//create png struct
+	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr)
+	{
+		fclose(fp);
+		return;
+	}
+
+	//create png info struct
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr)
+	{
+		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+		fclose(fp);
+		return;
+	}
+
+	//create png info struct
+	png_infop end_info = png_create_info_struct(png_ptr);
+	if (!end_info) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+		fclose(fp);
+		return;
+	}
+
+	//png error stuff, not sure libpng man suggests this.
+	if (setjmp(png_jmpbuf(png_ptr)))
+	{
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		fclose(fp);
+		return;
+	}
+
+	//init png reading
+	png_init_io(png_ptr, fp);
+
+	//let libpng know you already read the first 8 bytes
+	png_set_sig_bytes(png_ptr, 8);
+
+	// read all the info up to the image data
+	png_read_info(png_ptr, info_ptr);
+
+	//variables to pass to get info
+	int			bit_depth,
+				color_type;
+	png_uint_32	twidth,
+				theight;
+
+	int channels = png_get_channels( png_ptr, info_ptr );
+
+	// get info about png
+	png_get_IHDR(png_ptr, info_ptr, &twidth, &theight, &bit_depth, &color_type, NULL, NULL, NULL);
+
+	//update width and height based on png info
+	pic.m_width = twidth;
+	pic.m_height = theight;
+
+	if ( channels == 1 && bit_depth == 8 )
+		pic.m_bpp = 8;
+	if ( channels == 2 && bit_depth == 8 )
+		pic.m_bpp = 8;
+	if ( channels == 3 && bit_depth == 8 )
+		pic.m_bpp = 24;
+	if ( channels == 4 && bit_depth == 8 )
+		pic.m_bpp = 32;
+
+	if (color_type == PNG_COLOR_TYPE_RGB ||
+        color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+        png_set_bgr(png_ptr);
+
+
+	// Update the png info struct.
+	png_read_update_info(png_ptr, info_ptr);
+
+	// Row size in bytes.
+	int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+
+	// Allocate the image_data as a big block, to be given to opengl
+	png_byte *image_data = (png_byte*)malloc( rowbytes * pic.m_height );
+	if (!image_data)
+	{
+		//clean up memory and close stuff
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		fclose(fp);
+		DoHalt("LoadPicturePNG()\nFailed to allocate the image data for the PNG.\n");
+		return;
+	}
+
+	//row_pointers is for pointing to image_data for reading the png with libpng
+	png_bytep *row_pointers = new png_bytep[pic.m_height];
+	if (!row_pointers)
+	{
+		//clean up memory and close stuff
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+		free( image_data );
+		fclose(fp);
+		DoHalt("LoadPicturePNG()\nFailed to allocate the row pointers for the PNG.\n");
+		return;
+	}
+
+	// set the individual row_pointers to point at the correct offsets of image_data
+	for (int i = 0; i < pic.m_height; ++i)
+	{
+		//row_pointers[pic.m_height - 1 - i] = image_data + i * rowbytes;
+		row_pointers[i] = image_data + i * rowbytes;
+	}
+
+	//read the png into image_data through row_pointers
+	png_read_image(png_ptr, row_pointers);
+
+	// -- Release the existing memory
+    pic.Release();
+
+    // -- Allocate memory for the image
+    pic.Allocate( (void*)image_data );
+
+    fprintf( stdout, "LoadPicturePNG :: %u %u %u %u/%u\n", pic.m_width, pic.m_height, pic.m_bpp, rowbytes, pic.m_width*(pic.m_bpp/8) );
+
+	//clean up memory and close stuff
+	png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+	delete[] row_pointers;
+	fclose( fp );
+
 }
 
 void GetObjectCaracteristics(TModel* mptr, int& ylo, int& yhi)
@@ -1494,8 +1644,6 @@ void LoadCharacters()
             {
                 sprintf(logt, "huntdat/menu/pics/CALL%d.TGA", c-9);
                 LoadPicture(DinoInfo[AI_to_CIndex[c]].CallIcon, logt);
-                oglCreateSprite( true, DinoInfo[AI_to_CIndex[c]].CallIcon );
-                conv_pic(DinoInfo[AI_to_CIndex[c]].CallIcon);
             }
 
 
@@ -1516,8 +1664,6 @@ void LoadCharacters()
             {
                 sprintf(logt, "huntdat/weapons/%s", WeapInfo[c].BFName);
                 LoadPicture(Weapon.BulletPic[c], logt);
-                oglCreateSprite( true, Weapon.BulletPic[c] );
-                conv_pic(Weapon.BulletPic[c]);
                 PrintLog("Loading: ");
                 PrintLog(logt);
                 PrintLog("\n");

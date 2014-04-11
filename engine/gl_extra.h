@@ -78,7 +78,7 @@ void oglDrawBox(int x1, int y1, int x2, int y2, uint32_t color);
 void oglDrawLine(float x1,float y1,float x2,float y2,uint32_t color);
 void oglDrawCircle(int x,int y,int r, uint32_t color);
 void oglSetTexture( GLuint );
-void oglTextOut(int x,int y, char *text,uint32_t color);
+void oglTextOut(int x,int y, const char *text,uint32_t color);
 void GLTextureFilter(GLint Min, GLint Mag);
 void oglClearBuffers(void);
 int oglCreateSprite(bool Alpha, TPicture &pic);

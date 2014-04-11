@@ -3,6 +3,7 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/efx.h>
 #include <string.h>
 
 #include <cmath>
@@ -102,18 +103,22 @@ bool AudioAL::init( uint8_t p_voices )
 		// -- Grab all the extensions
 		m_extensions.clear();
 		const char* drv_exts = alGetString( AL_EXTENSIONS );
-		char* exts = (char*)malloc( strlen(drv_exts) );
-		memcpy( exts, drv_exts, strlen(drv_exts)+1 );
-
-		char* tok = strtok( exts, " " );
-
-		while ( tok )
+		/* Valgrind doesn't like this (read/writes of size 1)
+		if ( drv_exts != nullptr || strlen( drv_exts ) != 0 )
 		{
-			m_extensions.push_back( tok );
-			tok = strtok( NULL, " " );
-		}
+			char* exts = (char*)malloc( strlen(drv_exts) );
+			memcpy( exts, drv_exts, strlen(drv_exts)+1 );
 
-		free(exts);
+			char* tok = strtok( exts, " " );
+
+			while ( tok )
+			{
+				m_extensions.push_back( tok );
+				tok = strtok( NULL, " " );
+			}
+
+			free(exts);
+		}*/
 	}
 	else
 	{
@@ -126,6 +131,11 @@ bool AudioAL::init( uint8_t p_voices )
 	fprintf( m_stream, "\tOpenAL Vendor:\t\t%s\n", alGetString( AL_VENDOR ) );
 	// -- AL Renderer
 	fprintf( m_stream, "\tOpenAL Processor:\t%s\n", alGetString( AL_RENDERER ) );
+	// -- AL EFX Version
+	int32_t efx_version[2];
+	alcGetIntegerv(g_ALDevice, ALC_EFX_MAJOR_VERSION, 1, &efx_version[0]);
+	alcGetIntegerv(g_ALDevice, ALC_EFX_MINOR_VERSION, 1, &efx_version[1]);
+	fprintf( m_stream, "\tOpenAL EFX Version:\t\t%d.%d\n", efx_version[0], efx_version[1] );
 	// -- AL Extensions
 	fprintf( m_stream, "\tOpenAL Extensions\n" );
 	for ( int i=0; i<m_extensions.size(); i++ )
@@ -240,9 +250,6 @@ void AudioAL::setCameraOrientation( float p_alpha, float p_beta )
 	if ( !m_ready ) return;
 
 	float dir[] = {
-	/*	sinf(p_alpha),//*cosf(p_beta),
-		0.0f,//sinf(p_beta),
-		cosf(p_alpha),//*cosf(p_beta),*/
 		sinf(3.14f-p_alpha)*cosf(p_beta),
 		0.0f,
 		cosf(3.14f-p_alpha)*cosf(p_beta),
@@ -295,7 +302,7 @@ bool AudioAL::addVoice( sound_t p_snd, float x, float y, float z, float p_volume
 		alSourcei( src, AL_BUFFER, m_sounds[p_snd] );
 		alSourcef( src, AL_GAIN, p_volume );
 		alSourcef( src, AL_PITCH, 1.0f );		// Modify this slightly over or under 1.0f and we have some "unique" sound effects
-		alSourcef( src, AL_REFERENCE_DISTANCE, 256.0f * 4.0f );
+		alSourcef( src, AL_REFERENCE_DISTANCE, 256.0f * 4.0f ); // Change the 4 higher to make the sound heard over longer distances before it fades
 		alSourcef( src, AL_MAX_DISTANCE, MAX_SOUND_DISTANCE ); // 256 == 1 meter, 68 == "standard" view distance
 		alSourcePlay( src );
 		return true;

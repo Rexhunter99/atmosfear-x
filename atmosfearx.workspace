@@ -4,5 +4,6 @@
 		<Project filename="engine/engine.cbp" />
 		<Project filename="server/server.cbp" />
 		<Project filename="area-edit/Carnivores Area Editor.cbp" />
+		<Project filename="c3dit/c3dit.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

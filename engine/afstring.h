@@ -36,6 +36,13 @@ public:
 		m_data = new T[ m_length ];
 		memcpy( m_data, str, m_length * sizeof(T) );
 	}
+	// Copy Unicode C-Style String Constructor
+	string( const wchar_t* str )
+	{
+		m_length = wstrlen(str) + 1;
+		m_data = new T[ m_length ];
+		memcpy( m_data, str, m_length * sizeof(T) );
+	}
 
 	// Destructor
 	~string()

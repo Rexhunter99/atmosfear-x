@@ -836,8 +836,7 @@ void InitEngine()
     TargetDino = 1<<10;
     TargetCall = 10;
     WeaponPres = 1;
-    memset( MessageList, 0, sizeof(TMessageList)*32 );
-    //MessageList[0].timeleft = 0;
+    MessageList.clear();
 
     InitGameInfo();
 

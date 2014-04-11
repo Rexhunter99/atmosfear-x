@@ -7,6 +7,7 @@
 
 // -- STL
 #include <vector>
+#include <cerrno>
 using namespace std;
 
 
@@ -19,14 +20,32 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////
 // Methods
 
-void TPicture::Allocate()
+void TPicture::Allocate( void* p_data )
 {
 	if ( m_data ) return;
 	if ( m_texid ) return;
 
-	m_data = malloc( m_width * m_height * ( m_bpp/8 ) );
+	if ( p_data )
+	{
+		m_data = p_data;
+	}
+	else
+	{
+		m_data = malloc( m_width * m_height * ( m_bpp/8 ) );
+	}
 	glGenTextures( 1, &m_texid );
 
+	if ( !m_data && errno == EAGAIN ) // Implementation malloc specific...
+	{
+		glfwSleep( 0.5 );
+		m_data = malloc( m_width * m_height * ( m_bpp/8 ) );
+	}
+
+	if ( !m_data )
+	{
+		fprintf( stdout, "malloc failed :: %u\n", errno );
+		DoHalt( "TPicture::Allocate()\n\tFailed to allocate bitmap canvas!\n" );
+	}
 	if ( m_texid == 0 )
 	DoHalt( "TPicture::Allocate()\n\tFailed to create a GL texture!\n" );
 }
@@ -1946,8 +1965,8 @@ void DrawPictureExt(int x, int y, float s, TPicture &pic)
 
 	oglSetTexture( pic.m_texid );
 
-	oglSetRenderState( GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	oglSetRenderState( GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	oglSetRenderState( GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
 	glBegin(GL_QUADS);
 	glColor4f(1,1,1,1);
@@ -2073,31 +2092,19 @@ void ShowControlElements()
 
 		oglDrawBox( 0,0, WinW, (th*32)+th, 0x80000000 );
 
-		for (int i=0; i<32; i++)
+		for ( int i=0; i<(MessageList.size()<32)?MessageList.size():32; i++ )
 		{
-			if ( MessageList[i].mtext[0] == 0 ) continue;
-			//if (RealTime>MessageList[i].mTimeLeft) MessageList[i].mTimeLeft = 0;
-			oglTextOut(2, ( th * i ) + th, MessageList[i].mtext, *((uint32_t*)&MessageList[i].m_color ) );
+			string s = MessageList[i];
+			if ( s == "" ) continue;
+			oglTextOut( 2, ( th * i ) + th, MessageList[i].c_str(), 0xFFFFFFFF /*MessageList[i].m_color*/ );
 		}
 
 		char devstr[512];
-		sprintf( devstr, "~%s%s", cDevConsole, ((int)glfwGetTime() % 1) ? "|" : " " );
+		sprintf( devstr, "> %s%s", cDevConsole, ((int)glfwGetTime() % 1) ? "|" : " " );
 		Draw_Text(2, 0, devstr, 0xFFFF00FF );
 
 		oglSetRenderState( GL_BLEND, GL_FALSE );
 	}
-
-	/*for (int i=0; i<16; i++)
-	if (MessageList[i].mTimeLeft)
-	{
-		if (RealTime>MessageList[i].mTimeLeft) MessageList[i].mTimeLeft = 0;
-
-		float ratio = (float)( MessageList[i].mTimeLeft - RealTime ) / 5000.0f;
-		int alpha = 255 * ratio;
-		//alpha = 128;
-
-		oglTextOut(2, WinH - 48 - (GetTextH(0, MessageList[i].mtext) * i ), MessageList[i].mtext, 0x0020A0A0 | (alpha<<24) );
-	}*/
 
 	if (ExitTime)
 	{

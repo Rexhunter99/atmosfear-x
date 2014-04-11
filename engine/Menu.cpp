@@ -1,6 +1,5 @@
 
 #include "Hunt.h"
-
 #include "Menu.hpp"
 
 #include <cstdio>
@@ -33,24 +32,25 @@ void CMenuButton::cursorLeave()
 	this->pic_current = &this->pic_off;
 }
 
-void CMenuButton::draw()
+void CMenuButton::draw( )
 {
-	DrawPicture( this->x, this->y, *pic_current );
+	DrawPictureExt( this->x*owner->MenuScale, this->y*owner->MenuScale, owner->MenuScale, *pic_current );
 }
 
-void CMenuLabel::draw()
+void CMenuLabel::draw( )
 {
-	Draw_Text( this->x, this->y, (char*)text.c_str(), 0xFFFFFFFF );
+	Draw_Text( this->x*owner->MenuScale, this->y*owner->MenuScale, (char*)text.c_str(), 0xFFFFFFFF );
 }
 
-void CMenuImage::draw()
+void CMenuImage::draw( )
 {
-	DrawPicture( this->x, this->y, pic );
+	DrawPictureExt( this->x*owner->MenuScale, this->y*owner->MenuScale, owner->MenuScale, pic );
 }
 
 
 Menu::Menu()
 {
+	this->MenuScale	= 1.0f;
 }
 
 Menu::~Menu()
@@ -78,11 +78,12 @@ bool Menu::loadScript( string p_scriptname )
 	while ( !feof( fp ) )
 	{
 		char line[256];
+		char *line_p = line;
 		fgets( line, 255, fp );
 		line_toks.clear();
 
 		// -- Split the line up into tokens
-		char* tok = strtok( line, " \t\n" );
+		char* tok = strtok( line_p, " \t\n" );
 		if ( !tok ) continue;
 
 		// -- Check for comments
@@ -114,6 +115,14 @@ bool Menu::loadScript( string p_scriptname )
 
 			LoadPicture( MenuBackground, fn.c_str() );
 		}
+		else if ( line_toks[0] == "PROPS" )
+		{
+			TargetW = atoi( line_toks[1].c_str() );
+			TargetH = atoi( line_toks[2].c_str() );
+			int window_w, window_h;
+			glfwGetWindowSize( &window_w, &window_h );
+			this->MenuScale = (float)window_h / (float)this->TargetH;
+		}
 		else if ( line_toks[0] == "BUTTON" && line_toks.size() > 5 )	// BUTTON default_image hover_image x y id
 		{
 			CMenuButton *mbtn;
@@ -130,6 +139,7 @@ bool Menu::loadScript( string p_scriptname )
 			mbtn->w = mbtn->pic_on.m_width;
 			mbtn->h = mbtn->pic_on.m_height;
 			mbtn->pic_current = &mbtn->pic_off;
+			mbtn->owner	= this;
 		}
 		else if ( line_toks[0] == "LABEL" && line_toks.size() > 5 )	// LABEL text x y w h
 		{
@@ -142,6 +152,7 @@ bool Menu::loadScript( string p_scriptname )
 			mlab->y = atoi( line_toks[3].c_str() );
 			mlab->w = atoi( line_toks[4].c_str() );
 			mlab->h = atoi( line_toks[5].c_str() );
+			mlab->owner	= this;
 		}
 		else if ( line_toks[0] == "IMAGE" && line_toks.size() >= 3 )
 		{
@@ -153,6 +164,7 @@ bool Menu::loadScript( string p_scriptname )
 			LoadPicture( mimg->pic, fn1.c_str() );
 			mimg->x = atoi( line_toks[2].c_str() );
 			mimg->y = atoi( line_toks[3].c_str() );
+			mimg->owner	= this;
 		}
 	}
 
@@ -171,11 +183,17 @@ void Menu::processEvents()
 		glfwGetMouseButton( GLFW_MOUSE_BUTTON_RIGHT )
 	};
 
+	// -- Process the ratio/scale factor
+	int window_w, window_h;
+	glfwGetWindowSize( &window_w, &window_h );
+	this->MenuScale = (float)window_h / (float)this->TargetH;
+
 	for ( size_t i=0; i<MenuItems.size(); i++ )
 	{
 		CMenuItem* it = MenuItems[i];
 
-		if ( cursor.x >= it->x && cursor.y >= it->y && cursor.x <= (it->x+it->w) && cursor.y <= (it->y+it->h) )
+		if ( cursor.x >= (it->x*MenuScale) && cursor.y >= (it->y*MenuScale) &&
+			 cursor.x <= ((it->x*MenuScale)+(it->w*MenuScale)) && cursor.y <= ((it->y*MenuScale)+(it->h*MenuScale)) )
 		{
 			if ( mb[0] == GLFW_PRESS )
 			{
@@ -211,12 +229,12 @@ void Menu::processEvents()
 void Menu::draw()
 {
 	// -- Draw the background
-	DrawPictureTiled( MenuBackground );
+	DrawPictureExt( 0, 0, this->MenuScale, MenuBackground );//DrawPictureTiled( MenuBackground );
 
 	// -- Render all the menu items
 	for ( size_t i=0; i<MenuItems.size(); i++ )
 	{
 		CMenuItem* it = MenuItems[i];
-		it->draw();
+		it->draw( );
 	}
 }
